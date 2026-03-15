@@ -54,7 +54,7 @@ export default function FilterModal({
 
   const statuses = useMemo(
     () => ["Active", "Inactive", "Matured", "Pending"],
-    []
+    [],
   );
 
   const toggle = (section: string) =>
@@ -174,7 +174,7 @@ export default function FilterModal({
                     >
                       {label}
                     </button>
-                  )
+                  ),
                 )}
               </div>
 
@@ -224,7 +224,9 @@ export default function FilterModal({
                 const n = raw ? Number(raw) : null;
                 setPayload((p) => ({
                   ...p,
-                  investmentType: Number.isFinite(n as any) ? (n as number) : null,
+                  investmentType: Number.isFinite(n as any)
+                    ? (n as number)
+                    : null,
                 }));
               }}
               className="w-full border border-gray-300 rounded-md px-2 py-1 text-xs mt-1 bg-white"
@@ -367,16 +369,13 @@ export default function FilterModal({
     </div>
   );
 
-  return (
-    variant === "popover" ? (
-      open ? (
-        content
-      ) : null
-    ) : (
-      <Modal open={open} onClosed={() => setOpen(false)} setClose={setOpen}>
-        {content}
-      </Modal>
-    )
+  return variant === "popover" ? (
+    open ? (
+      content
+    ) : null
+  ) : (
+    <Modal open={open} onClosed={() => setOpen(false)} setClose={setOpen}>
+      {content}
+    </Modal>
   );
 }
-

@@ -18,7 +18,10 @@ import { changePassword } from "@/services/webinvestment";
 import { authSessionAtom, userEmailAtom } from "@/state/appState";
 import { useAtomValue } from "jotai";
 import { imagesAndIcons } from "@/constants/imagesAndIcons";
-import { checkPasswordValidity, checkPasswordValidityManual } from "@/lib/password";
+import {
+  checkPasswordValidity,
+  checkPasswordValidityManual,
+} from "@/lib/password";
 
 type Tab = "password" | "pin" | "help";
 
@@ -49,9 +52,7 @@ function TabButton({
           alt=""
           width={14}
           height={14}
-          className={`h-[14px] w-[14px] ${
-            active ? "" : "opacity-50"
-          }`}
+          className={`h-[14px] w-[14px] ${active ? "" : "opacity-50"}`}
         />
         {label}
       </span>
@@ -88,8 +89,12 @@ function SupportRow({
           className="mt-0.5 h-[24px] w-[24px] shrink-0"
         />
         <div>
-          <p className="text-[11px] font-medium text-[#2E2E2E] leading-4">{title}</p>
-          <p className="mt-0.5 text-[10px] text-[#979797] leading-4">{subtitle}</p>
+          <p className="text-[11px] font-medium text-[#2E2E2E] leading-4">
+            {title}
+          </p>
+          <p className="mt-0.5 text-[10px] text-[#979797] leading-4">
+            {subtitle}
+          </p>
         </div>
       </div>
       <span className="text-[#5F6368]">›</span>
@@ -327,7 +332,10 @@ export default function SettingsPage() {
                     }
                     const validity = checkPasswordValidity(newPassword || "");
                     if (validity !== true) {
-                      const msg = typeof validity === "string" ? validity : "Invalid password";
+                      const msg =
+                        typeof validity === "string"
+                          ? validity
+                          : "Invalid password";
                       showErrorToast("Error", msg);
                       return;
                     }

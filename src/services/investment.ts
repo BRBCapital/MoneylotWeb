@@ -57,10 +57,12 @@ export type InvestmentWithdrawalResponse = {
 export async function withdrawInvestment(payload: InvestmentWithdrawalRequest) {
   const res = await apiPostJson<InvestmentWithdrawalResponse>(
     "/api/v1/investment/withdrawal",
-    payload
+    payload,
   );
   if (!res?.status) {
-    const err = new Error(res?.message || "Unable to complete withdrawal. Please try again.");
+    const err = new Error(
+      res?.message || "Unable to complete withdrawal. Please try again.",
+    );
     (err as any).details = res;
     throw err;
   }
@@ -84,10 +86,12 @@ export type InvestmentReinvestResponse = {
 export async function reinvestInvestment(payload: InvestmentReinvestRequest) {
   const res = await apiPostJson<InvestmentReinvestResponse>(
     "/api/v1/investment/reinvest",
-    payload
+    payload,
   );
   if (!res?.status) {
-    throw new Error(res?.message || "Unable to rollover investment. Please try again.");
+    throw new Error(
+      res?.message || "Unable to rollover investment. Please try again.",
+    );
   }
   return res;
 }

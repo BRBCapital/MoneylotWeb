@@ -10,11 +10,7 @@ import InvestmentSummary from "@/components/organisms/onboarding/InvestmentSumma
 import PaymentDetailsTable from "@/components/organisms/onboarding/PaymentDetailsTable";
 import EnterTransactionPinModal from "@/components/modals/EnterTransactionPinModal";
 import { imagesAndIcons } from "@/constants/imagesAndIcons";
-import {
-  formatDateLong,
-  formatNGN,
-  parseMoney,
-} from "@/lib/investment";
+import { formatDateLong, formatNGN, parseMoney } from "@/lib/investment";
 import { ApiError } from "@/lib/apiClient";
 import {
   createInvestment,
@@ -22,13 +18,20 @@ import {
   getRates,
   InvestmentRateDto,
 } from "@/services/webinvestment";
-import { fundInvestment, FundInvestmentCheckoutData } from "@/services/investment";
+import {
+  fundInvestment,
+  FundInvestmentCheckoutData,
+} from "@/services/investment";
 import { showSuccessToast } from "@/state/toastState";
 import { getSessionToken } from "@/state/appState";
 import useCountdown from "@/hooks/useCountdown";
 import { isAbortError } from "@/lib/isAbortError";
 import LoadingOverlay from "@/components/ui/LoadingOverlay";
-import { secureGetJson, secureRemove, secureSetJson } from "@/lib/secureStorage";
+import {
+  secureGetJson,
+  secureRemove,
+  secureSetJson,
+} from "@/lib/secureStorage";
 import IconCheckbox from "@/components/ui/IconCheckbox";
 
 type Step = 1 | 2 | 3 | 4;
@@ -121,18 +124,25 @@ export default function NewInvestmentPage() {
   const [pinOpen, setPinOpen] = useState(false);
   const [transactionPin, setTransactionPin] = useState("");
   const [createdInvestmentId, setCreatedInvestmentId] = useState<number | null>(
-    null
+    null,
   );
   const [fundingLoading, setFundingLoading] = useState(false);
   const [fundingError, setFundingError] = useState<string | null>(null);
-  const [checkout, setCheckout] = useState<FundInvestmentCheckoutData | null>(null);
+  const [checkout, setCheckout] = useState<FundInvestmentCheckoutData | null>(
+    null,
+  );
   const [checkoutRef, setCheckoutRef] = useState<string | null>(null);
-  const [checkoutExpiryAtMs, setCheckoutExpiryAtMs] = useState<number | null>(null);
+  const [checkoutExpiryAtMs, setCheckoutExpiryAtMs] = useState<number | null>(
+    null,
+  );
   const fundCalledRef = useRef(false);
   const [flowHydrated, setFlowHydrated] = useState(false);
 
   const expirySeconds = useMemo(() => {
-    if (typeof checkoutExpiryAtMs === "number" && Number.isFinite(checkoutExpiryAtMs)) {
+    if (
+      typeof checkoutExpiryAtMs === "number" &&
+      Number.isFinite(checkoutExpiryAtMs)
+    ) {
       return Math.max(0, Math.floor((checkoutExpiryAtMs - Date.now()) / 1000));
     }
     const m = checkout?.expiryInMinutes;
@@ -168,7 +178,9 @@ export default function NewInvestmentPage() {
   const selectedRatePa = selectedRate ? selectedRate.rate / 100 : null;
 
   const tenorOptions = useMemo(() => {
-    const sorted = [...rates].sort((a, b) => a.investmentPeriod - b.investmentPeriod);
+    const sorted = [...rates].sort(
+      (a, b) => a.investmentPeriod - b.investmentPeriod,
+    );
     return sorted.map((r) => ({
       id: r.id,
       days: r.investmentPeriod,
@@ -181,12 +193,19 @@ export default function NewInvestmentPage() {
   const [expectedReturn, setExpectedReturn] = useState<number | null>(null);
   const [totalAtMaturity, setTotalAtMaturity] = useState<number | null>(null);
   const [maturityDateText, setMaturityDateText] = useState<string | null>(null);
-  const [investmentTypeText, setInvestmentTypeText] = useState<string | null>(null);
-  const [rateFormattedText, setRateFormattedText] = useState<string | null>(null);
+  const [investmentTypeText, setInvestmentTypeText] = useState<string | null>(
+    null,
+  );
+  const [rateFormattedText, setRateFormattedText] = useState<string | null>(
+    null,
+  );
   const [tenorText, setTenorText] = useState<string | null>(null);
   const [acknowledge, setAcknowledge] = useState(false);
 
-  const amount = useMemo(() => parseMoney(investmentAmount), [investmentAmount]);
+  const amount = useMemo(
+    () => parseMoney(investmentAmount),
+    [investmentAmount],
+  );
 
   const isReady =
     investmentAmount.trim() !== "" &&
@@ -201,18 +220,23 @@ export default function NewInvestmentPage() {
     if (!isReady || !selectedRatePa || !selectedTenorDays) return [];
 
     const expected =
-      typeof expectedReturn === "number" && Number.isFinite(expectedReturn) ? expectedReturn : null;
+      typeof expectedReturn === "number" && Number.isFinite(expectedReturn)
+        ? expectedReturn
+        : null;
     const total =
       typeof totalAtMaturity === "number" && Number.isFinite(totalAtMaturity)
         ? totalAtMaturity
         : expected != null
-        ? amount + expected
-        : null;
+          ? amount + expected
+          : null;
 
     return [
       ["Investment Type", investmentTypeText || "Fixed Deposit"],
       ["Investment Tenor", tenorText || `${selectedTenorDays} Days`],
-      ["Interest Rate", rateFormattedText || `${(selectedRatePa * 100).toFixed(2)}% p.a`],
+      [
+        "Interest Rate",
+        rateFormattedText || `${(selectedRatePa * 100).toFixed(2)}% p.a`,
+      ],
       ["Investment Amount", formatNGN(amount)],
       ["Expected Returns", expected != null ? formatNGN(expected) : "-"],
       ["Total at Maturity", total != null ? formatNGN(total) : "-"],
@@ -220,7 +244,9 @@ export default function NewInvestmentPage() {
         "Maturity Date",
         maturityDateText?.trim()
           ? maturityDateText.trim()
-          : formatDateLong(new Date(Date.now() + selectedTenorDays * 24 * 60 * 60 * 1000)),
+          : formatDateLong(
+              new Date(Date.now() + selectedTenorDays * 24 * 60 * 60 * 1000),
+            ),
       ],
     ];
   }, [
@@ -274,20 +300,66 @@ export default function NewInvestmentPage() {
       if (saved && typeof saved === "object") {
         const s = Number(saved.step);
         if (Number.isFinite(s) && s >= 1 && s <= 4) setStep(s as Step);
-        setInvestmentAmount(typeof saved.investmentAmount === "string" ? saved.investmentAmount : "");
-        setSelectedRateId(typeof saved.selectedRateId === "number" ? saved.selectedRateId : null);
-        setExpectedReturn(typeof saved.expectedReturn === "number" ? saved.expectedReturn : null);
-        setTotalAtMaturity(typeof saved.totalAtMaturity === "number" ? saved.totalAtMaturity : null);
-        setMaturityDateText(typeof saved.maturityDateText === "string" ? saved.maturityDateText : null);
-        setInvestmentTypeText(typeof saved.investmentTypeText === "string" ? saved.investmentTypeText : null);
-        setRateFormattedText(typeof saved.rateFormattedText === "string" ? saved.rateFormattedText : null);
-        setTenorText(typeof saved.tenorText === "string" ? saved.tenorText : null);
+        setInvestmentAmount(
+          typeof saved.investmentAmount === "string"
+            ? saved.investmentAmount
+            : "",
+        );
+        setSelectedRateId(
+          typeof saved.selectedRateId === "number"
+            ? saved.selectedRateId
+            : null,
+        );
+        setExpectedReturn(
+          typeof saved.expectedReturn === "number"
+            ? saved.expectedReturn
+            : null,
+        );
+        setTotalAtMaturity(
+          typeof saved.totalAtMaturity === "number"
+            ? saved.totalAtMaturity
+            : null,
+        );
+        setMaturityDateText(
+          typeof saved.maturityDateText === "string"
+            ? saved.maturityDateText
+            : null,
+        );
+        setInvestmentTypeText(
+          typeof saved.investmentTypeText === "string"
+            ? saved.investmentTypeText
+            : null,
+        );
+        setRateFormattedText(
+          typeof saved.rateFormattedText === "string"
+            ? saved.rateFormattedText
+            : null,
+        );
+        setTenorText(
+          typeof saved.tenorText === "string" ? saved.tenorText : null,
+        );
         setAcknowledge(Boolean(saved.acknowledge));
-        setCreatedInvestmentId(typeof saved.createdInvestmentId === "number" ? saved.createdInvestmentId : null);
-        setTransactionPin(typeof saved.transactionPin === "string" ? saved.transactionPin : "");
-        setCheckout(saved.checkout && typeof saved.checkout === "object" ? (saved.checkout as any) : null);
-        setCheckoutRef(typeof saved.checkoutRef === "string" ? saved.checkoutRef : null);
-        setCheckoutExpiryAtMs(typeof saved.checkoutExpiryAtMs === "number" ? saved.checkoutExpiryAtMs : null);
+        setCreatedInvestmentId(
+          typeof saved.createdInvestmentId === "number"
+            ? saved.createdInvestmentId
+            : null,
+        );
+        setTransactionPin(
+          typeof saved.transactionPin === "string" ? saved.transactionPin : "",
+        );
+        setCheckout(
+          saved.checkout && typeof saved.checkout === "object"
+            ? (saved.checkout as any)
+            : null,
+        );
+        setCheckoutRef(
+          typeof saved.checkoutRef === "string" ? saved.checkoutRef : null,
+        );
+        setCheckoutExpiryAtMs(
+          typeof saved.checkoutExpiryAtMs === "number"
+            ? saved.checkoutExpiryAtMs
+            : null,
+        );
       }
       setFlowHydrated(true);
     })();
@@ -393,7 +465,10 @@ export default function NewInvestmentPage() {
         setCheckoutRef(typeof res?.message === "string" ? res.message : null);
         const raw = (res as any)?.data;
         const checkoutData =
-          raw && typeof raw === "object" && (raw as any).data && typeof (raw as any).data === "object"
+          raw &&
+          typeof raw === "object" &&
+          (raw as any).data &&
+          typeof (raw as any).data === "object"
             ? (raw as any).data
             : raw;
         if (checkoutData && typeof checkoutData === "object") {
@@ -474,7 +549,9 @@ export default function NewInvestmentPage() {
             </div>
 
             <div className="mt-5">
-              <p className="text-[14px] font-medium text-[#2E2E2E]">Select Tenor</p>
+              <p className="text-[14px] font-medium text-[#2E2E2E]">
+                Select Tenor
+              </p>
               <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
                 {tenorOptions.map((opt) => (
                   <TenorCard
@@ -495,7 +572,9 @@ export default function NewInvestmentPage() {
                 ))}
               </div>
               {ratesLoading ? (
-                <p className="mt-2 text-[10px] text-[#5F6368]">Loading rates...</p>
+                <p className="mt-2 text-[10px] text-[#5F6368]">
+                  Loading rates...
+                </p>
               ) : null}
             </div>
 
@@ -532,28 +611,45 @@ export default function NewInvestmentPage() {
                     }
                     try {
                       setExpectedLoading(true);
-                      const res = await getExpectedReturn({ tenorId: selectedTenorId, amount });
-                      console.log("[New Investment] get-expected-return response:", res);
+                      const res = await getExpectedReturn({
+                        tenorId: selectedTenorId,
+                        amount,
+                      });
+                      console.log(
+                        "[New Investment] get-expected-return response:",
+                        res,
+                      );
                       setExpectedReturn(res.expectedReturn);
                       setTotalAtMaturity(
-                        typeof res.totalAtMaturity === "number" ? res.totalAtMaturity : null
+                        typeof res.totalAtMaturity === "number"
+                          ? res.totalAtMaturity
+                          : null,
                       );
                       setMaturityDateText(
-                        typeof res.maturityDate === "string" ? res.maturityDate : null
+                        typeof res.maturityDate === "string"
+                          ? res.maturityDate
+                          : null,
                       );
                       setInvestmentTypeText(
-                        typeof res.investmentType === "string" ? res.investmentType : null
+                        typeof res.investmentType === "string"
+                          ? res.investmentType
+                          : null,
                       );
                       setRateFormattedText(
-                        typeof res.rateFormatted === "string" ? res.rateFormatted : null
+                        typeof res.rateFormatted === "string"
+                          ? res.rateFormatted
+                          : null,
                       );
-                      setTenorText(typeof res.tenor === "string" ? res.tenor : null);
+                      setTenorText(
+                        typeof res.tenor === "string" ? res.tenor : null,
+                      );
                       setAcknowledge(false);
                       setStep(2);
                     } catch (e) {
                       if (e instanceof ApiError) setExpectedError(e.message);
                       else if (e instanceof Error) setExpectedError(e.message);
-                      else setExpectedError("Unable to compute expected return.");
+                      else
+                        setExpectedError("Unable to compute expected return.");
                     } finally {
                       setExpectedLoading(false);
                     }
@@ -596,7 +692,9 @@ export default function NewInvestmentPage() {
                 }}
               />
               <div>
-                By proceeding, I agree that all returns accrued will be forfeited and a penalty fee incurred if funds are withdrawn before maturity
+                By proceeding, I agree that all returns accrued will be
+                forfeited and a penalty fee incurred if funds are withdrawn
+                before maturity
               </div>
             </div>
 
@@ -627,7 +725,7 @@ export default function NewInvestmentPage() {
                 {fundingError}
               </div>
             ) : null}
-           
+
             <PaymentDetailsTable
               amountInput={investmentAmount}
               bankName={checkout?.bankName || "-"}
@@ -677,7 +775,8 @@ export default function NewInvestmentPage() {
                 Your Investment Is Being Processed
               </h1>
               <p className="mx-auto mt-1 max-w-[420px] text-[11px] text-[#5F6368]">
-                Our team is reviewing your investment. An email confirmation will be sent to you shortly.
+                Our team is reviewing your investment. An email confirmation
+                will be sent to you shortly.
               </p>
 
               <div className="mt-6 flex justify-center">
@@ -722,7 +821,10 @@ export default function NewInvestmentPage() {
                 tenorId: selectedTenorId,
                 acknowledge: true,
               });
-              console.log("[New Investment] webinvestment/create response:", res);
+              console.log(
+                "[New Investment] webinvestment/create response:",
+                res,
+              );
               const id = extractInvestmentId(res?.data);
               if (id != null) setCreatedInvestmentId(id);
               if (typeof window !== "undefined") {
@@ -732,7 +834,7 @@ export default function NewInvestmentPage() {
                     investmentId: id,
                     transactionPin: pin,
                     amount,
-                  })
+                  }),
                 );
               }
               setStep(3);
@@ -747,4 +849,3 @@ export default function NewInvestmentPage() {
     </OnboardingShell>
   );
 }
-

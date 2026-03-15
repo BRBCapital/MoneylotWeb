@@ -108,7 +108,9 @@ export default function TransactionsPage() {
           (typeof x.transactionDate === "string" && x.transactionDate) ||
           (typeof x.createdAt === "string" && x.createdAt) ||
           "-";
-        return { data: [referenceNumber, amountNode, product, type, dateUpdated] };
+        return {
+          data: [referenceNumber, amountNode, product, type, dateUpdated],
+        };
       });
   }
 
@@ -122,9 +124,13 @@ export default function TransactionsPage() {
     const minParsed = hasMin ? Number(nextFilter.minAmount) : NaN;
     const maxParsed = hasMax ? Number(nextFilter.maxAmount) : NaN;
     const minAmount =
-      hasMin && Number.isFinite(minParsed) && minParsed > 0 ? minParsed : undefined;
+      hasMin && Number.isFinite(minParsed) && minParsed > 0
+        ? minParsed
+        : undefined;
     const maxAmount =
-      hasMax && Number.isFinite(maxParsed) && maxParsed > 0 ? maxParsed : undefined;
+      hasMax && Number.isFinite(maxParsed) && maxParsed > 0
+        ? maxParsed
+        : undefined;
     const payload = {
       ...(minAmount !== undefined ? { minAmount } : {}),
       ...(maxAmount !== undefined ? { maxAmount } : {}),
@@ -166,7 +172,11 @@ export default function TransactionsPage() {
 
   const headers = useMemo(
     () => [
-      { text: "Transaction Reference", type: "text" as const, minWidth: "220px" },
+      {
+        text: "Transaction Reference",
+        type: "text" as const,
+        minWidth: "220px",
+      },
       { text: "Amount", type: "component" as const, minWidth: "140px" },
       { text: "Product", type: "text" as const, minWidth: "160px" },
       { text: "Type", type: "text" as const, minWidth: "140px" },

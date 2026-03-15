@@ -39,7 +39,9 @@ const navItems: NavItem[] = [
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const isSettingsActive = pathname === "/dashboard/settings" || pathname.startsWith("/dashboard/settings/");
+  const isSettingsActive =
+    pathname === "/dashboard/settings" ||
+    pathname.startsWith("/dashboard/settings/");
   const session = useAtomValue(authSessionAtom);
   const [mounted, setMounted] = useState(false);
 
@@ -47,8 +49,10 @@ export default function Sidebar() {
     setMounted(true);
   }, []);
 
-  const fullName = session ? `${session.firstName} ${session.lastName}`.trim() : "";
-  const displayName = mounted ? (fullName || "Account") : "Account";
+  const fullName = session
+    ? `${session.firstName} ${session.lastName}`.trim()
+    : "";
+  const displayName = mounted ? fullName || "Account" : "Account";
 
   return (
     <aside className="w-[210px] bg-[#F6F6F6] border-r border-[#EEEEEE] min-h-screen flex flex-col">
@@ -70,8 +74,10 @@ export default function Sidebar() {
           {navItems.map((item) => {
             const isActive =
               item.href === "/dashboard"
-                ? pathname === "/dashboard" || pathname.startsWith("/dashboard/investments")
-                : pathname === item.href || pathname.startsWith(item.href + "/");
+                ? pathname === "/dashboard" ||
+                  pathname.startsWith("/dashboard/investments")
+                : pathname === item.href ||
+                  pathname.startsWith(item.href + "/");
             return (
               <li key={item.href}>
                 <Link
@@ -110,14 +116,20 @@ export default function Sidebar() {
               }`}
             >
               <Image
-                src={isSettingsActive ? imagesAndIcons.settingsActiveIcon : imagesAndIcons.settingsIcon}
+                src={
+                  isSettingsActive
+                    ? imagesAndIcons.settingsActiveIcon
+                    : imagesAndIcons.settingsIcon
+                }
                 alt="Settings"
                 width={24}
                 height={24}
                 className="h-[24px] w-[24px]"
               />
             </span>
-            <span className="text-[14px] font-medium text-[#2E2E2E]">{displayName}</span>
+            <span className="text-[14px] font-medium text-[#2E2E2E]">
+              {displayName}
+            </span>
           </Link>
 
           <div className="h-px w-full bg-[#E9E9E9]" />
@@ -159,7 +171,9 @@ export default function Sidebar() {
                 className="h-[24px] w-[24px]"
               />
             </span>
-            <span className="text-[14px] font-semibold text-[#EB001B]">Log Out</span>
+            <span className="text-[14px] font-semibold text-[#EB001B]">
+              Log Out
+            </span>
           </button>
         </div>
       </div>

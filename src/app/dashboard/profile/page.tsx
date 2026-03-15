@@ -6,13 +6,22 @@ import DashboardShell from "@/components/templates/dashboard/DashboardShell";
 import Button from "@/components/ui/Button";
 import AddBankAccountModal from "@/components/modals/AddBankAccountModal";
 import Pills from "@/components/ui/Pills";
-import { getPersonalDetail, PersonalDetailDto } from "@/services/accountManagement";
+import {
+  getPersonalDetail,
+  PersonalDetailDto,
+} from "@/services/accountManagement";
 import { ApiError } from "@/lib/apiClient";
 import { isAbortError } from "@/lib/isAbortError";
 import LoadingOverlay from "@/components/ui/LoadingOverlay";
-import { deleteWithdrawalAccount, getWithdrawalAccounts, updateWithdrawalAccount } from "@/services/withdrawal";
+import {
+  deleteWithdrawalAccount,
+  getWithdrawalAccounts,
+  updateWithdrawalAccount,
+} from "@/services/withdrawal";
 import { showErrorToast, showSuccessToast } from "@/state/toastState";
-import BankAccountModal, { BankAccountModalData } from "@/components/modals/BankAccountModal";
+import BankAccountModal, {
+  BankAccountModalData,
+} from "@/components/modals/BankAccountModal";
 import { API_BASE_URL } from "@/lib/apiClient";
 import { verifyNinOnly } from "@/services/verification";
 
@@ -29,7 +38,17 @@ function ReadOnlyField({ label, value }: { label: string; value: string }) {
   );
 }
 
-function TextField({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string }) {
+function TextField({
+  label,
+  value,
+  onChange,
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+}) {
   return (
     <div className="w-full">
       <label className="block text-[14px] font-medium text-[#5F6368]">
@@ -47,7 +66,10 @@ function TextField({ label, value, onChange, placeholder }: { label: string; val
 
 function BankAvatar({ text, bg }: { text: string; bg: string }) {
   return (
-    <div className="h-10 w-10 rounded-full flex items-center justify-center text-white text-[10px] font-semibold" style={{ backgroundColor: bg }}>
+    <div
+      className="h-10 w-10 rounded-full flex items-center justify-center text-white text-[10px] font-semibold"
+      style={{ backgroundColor: bg }}
+    >
       {text}
     </div>
   );
@@ -98,7 +120,14 @@ function initialsFromBankName(x: string) {
   return `${a}${b}${c}`.toUpperCase();
 }
 
-const BANK_COLOR_PALETTE = ["#E6532C", "#4C1D95", "#0EA5E9", "#16A34A", "#D97706", "#DC2626"] as const;
+const BANK_COLOR_PALETTE = [
+  "#E6532C",
+  "#4C1D95",
+  "#0EA5E9",
+  "#16A34A",
+  "#D97706",
+  "#DC2626",
+] as const;
 
 export default function ProfilePage() {
   const [loading, setLoading] = useState(false);
@@ -139,14 +168,19 @@ export default function ProfilePage() {
 
         const root = res.data as any;
         const data: PersonalDetailDto =
-          root && typeof root === "object" && root.data && typeof root.data === "object"
+          root &&
+          typeof root === "object" &&
+          root.data &&
+          typeof root.data === "object"
             ? (root.data as any)
             : (root as any);
 
         const fn = typeof data?.firstName === "string" ? data.firstName : "";
         const ln = typeof data?.lastName === "string" ? data.lastName : "";
-        const ph = typeof data?.phoneNumber === "string" ? data.phoneNumber : "";
-        const em = typeof data?.emailAddress === "string" ? data.emailAddress : "";
+        const ph =
+          typeof data?.phoneNumber === "string" ? data.phoneNumber : "";
+        const em =
+          typeof data?.emailAddress === "string" ? data.emailAddress : "";
         const bv = typeof data?.bvn === "string" ? data.bvn : "";
         const ni = typeof data?.nin === "string" ? data.nin : "";
 
@@ -207,7 +241,12 @@ export default function ProfilePage() {
       } catch (e) {
         if (isAbortError(e)) return;
         setWithdrawalAccounts([]);
-        const msg = e instanceof ApiError ? e.message : e instanceof Error ? e.message : "Unable to load bank accounts";
+        const msg =
+          e instanceof ApiError
+            ? e.message
+            : e instanceof Error
+              ? e.message
+              : "Unable to load bank accounts";
         setBankError(msg);
         console.error("[Profile] withdrawal/get error:", e);
       } finally {
@@ -221,7 +260,8 @@ export default function ProfilePage() {
     return (withdrawalAccounts || []).map((x: any, idx: number) => {
       const bankName = typeof x?.bankName === "string" ? x.bankName : "";
       const bankCode = typeof x?.bankCode === "string" ? x.bankCode : "";
-      const accountNumber = typeof x?.accountNumber === "string" ? x.accountNumber : "";
+      const accountNumber =
+        typeof x?.accountNumber === "string" ? x.accountNumber : "";
       const logoRaw = typeof x?.logo === "string" ? x.logo : "";
       const logo =
         logoRaw && !logoRaw.startsWith("http")
@@ -235,7 +275,10 @@ export default function ProfilePage() {
         .reduce((a: number, c: string) => a + c.charCodeAt(0), 0);
       const bg = BANK_COLOR_PALETTE[Math.abs(hash) % BANK_COLOR_PALETTE.length];
       return {
-        id: typeof x?.id === "number" || typeof x?.id === "string" ? String(x.id) : `${idx}`,
+        id:
+          typeof x?.id === "number" || typeof x?.id === "string"
+            ? String(x.id)
+            : `${idx}`,
         bankName,
         bankCode,
         accountNumber,
@@ -252,28 +295,39 @@ export default function ProfilePage() {
   const selectedBank = useMemo<BankAccountModalData | null>(() => {
     const id = selectedBankId;
     if (!id) return null;
-    const raw = (withdrawalAccounts || []).find((x: any) => String(x?.id) === id) ?? null;
+    const raw =
+      (withdrawalAccounts || []).find((x: any) => String(x?.id) === id) ?? null;
     if (!raw || typeof raw !== "object") return null;
 
-    const bankName = typeof (raw as any).bankName === "string" ? (raw as any).bankName : "";
-    const bankCode = typeof (raw as any).bankCode === "string" ? (raw as any).bankCode : "";
-    const accountNumber = typeof (raw as any).accountNumber === "string" ? (raw as any).accountNumber : "";
+    const bankName =
+      typeof (raw as any).bankName === "string" ? (raw as any).bankName : "";
+    const bankCode =
+      typeof (raw as any).bankCode === "string" ? (raw as any).bankCode : "";
+    const accountNumber =
+      typeof (raw as any).accountNumber === "string"
+        ? (raw as any).accountNumber
+        : "";
     const accountName =
       typeof (raw as any).accountName === "string"
         ? (raw as any).accountName
         : typeof (raw as any).account_name === "string"
           ? (raw as any).account_name
           : "";
-    const logoRaw = typeof (raw as any).logo === "string" ? (raw as any).logo : "";
+    const logoRaw =
+      typeof (raw as any).logo === "string" ? (raw as any).logo : "";
     const logo =
       logoRaw && !logoRaw.startsWith("http")
         ? `${API_BASE_URL.replace(/\/$/, "")}/logo/${logoRaw.replace(/^\/+/, "")}`
         : logoRaw;
     // v2: `default` indicates active/default account
-    const isDefault = Boolean((raw as any).default ?? (raw as any).isDefault ?? (raw as any).isActive);
+    const isDefault = Boolean(
+      (raw as any).default ?? (raw as any).isDefault ?? (raw as any).isActive,
+    );
     const active = isDefault;
     const createdAt =
-      typeof (raw as any).createdAt === "string" ? (raw as any).createdAt : null;
+      typeof (raw as any).createdAt === "string"
+        ? (raw as any).createdAt
+        : null;
 
     // Reuse the computed card avatar styles (fallback-safe)
     const card = bankCards.find((b) => b.id === id);
@@ -321,11 +375,26 @@ export default function ProfilePage() {
               </div>
             ) : null}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <ReadOnlyField label="First Name" value={loading ? "Loading..." : (firstName || "-")} />
-              <ReadOnlyField label="Last Name" value={loading ? "Loading..." : (lastName || "-")} />
-              <ReadOnlyField label="Phone Number" value={loading ? "Loading..." : (phoneDisplay || "-")} />
-              <ReadOnlyField label="Email Address" value={loading ? "Loading..." : (email || "-")} />
-              <ReadOnlyField label="BVN (Bank Verification Number)" value={loading ? "Loading..." : (bvn || "-")} />
+              <ReadOnlyField
+                label="First Name"
+                value={loading ? "Loading..." : firstName || "-"}
+              />
+              <ReadOnlyField
+                label="Last Name"
+                value={loading ? "Loading..." : lastName || "-"}
+              />
+              <ReadOnlyField
+                label="Phone Number"
+                value={loading ? "Loading..." : phoneDisplay || "-"}
+              />
+              <ReadOnlyField
+                label="Email Address"
+                value={loading ? "Loading..." : email || "-"}
+              />
+              <ReadOnlyField
+                label="BVN (Bank Verification Number)"
+                value={loading ? "Loading..." : bvn || "-"}
+              />
               <div className="w-full">
                 <label className="block text-[14px] font-medium text-[#5F6368]">
                   National Identity Number (NIN)
@@ -358,7 +427,13 @@ export default function ProfilePage() {
                 width={140}
                 fontSize="text-[14px]"
                 className="rounded-[8px] font-medium"
-                disabled={loading || bankLoading || bankActionLoading || ninSaving || ninLocked}
+                disabled={
+                  loading ||
+                  bankLoading ||
+                  bankActionLoading ||
+                  ninSaving ||
+                  ninLocked
+                }
                 onClick={async () => {
                   const msg = validateNin(nin);
                   if (msg) {
@@ -370,8 +445,14 @@ export default function ProfilePage() {
                     setNinError(null);
                     setNinSaving(true);
                     const res = await verifyNinOnly({ nin });
-                    console.log("[Profile] verification/verify-NIN response:", res);
-                    showSuccessToast("Success", (res?.message as any) || "NIN verified successfully");
+                    console.log(
+                      "[Profile] verification/verify-NIN response:",
+                      res,
+                    );
+                    showSuccessToast(
+                      "Success",
+                      (res?.message as any) || "NIN verified successfully",
+                    );
                   } catch (err) {
                     const msg =
                       err instanceof ApiError
@@ -488,12 +569,11 @@ export default function ProfilePage() {
         onDelete={async () => {
           const selId = selectedBankId;
           if (!selId) return;
-          const isDefault =
-            (withdrawalAccounts || []).some(
-              (x: any) =>
-                String(x?.id) === selId &&
-                Boolean(x?.default ?? x?.isDefault ?? x?.isActive),
-            );
+          const isDefault = (withdrawalAccounts || []).some(
+            (x: any) =>
+              String(x?.id) === selId &&
+              Boolean(x?.default ?? x?.isDefault ?? x?.isActive),
+          );
           if (isDefault) return;
           try {
             setBankActionLoading(true);

@@ -22,21 +22,45 @@ export default function DemoPage() {
       ],
       data: [
         {
-          data: ["Treasury Bills · 90 Days", "₦1,000,000", "17.50%", "Matured", "24 Jun, 2024 | 5:24 PM"],
+          data: [
+            "Treasury Bills · 90 Days",
+            "₦1,000,000",
+            "17.50%",
+            "Matured",
+            "24 Jun, 2024 | 5:24 PM",
+          ],
         },
         {
-          data: ["Treasury Bills · 90 Days", "₦5,000,000", "17.50%", "Active", "14 Jun, 2024 | 5:24 PM"],
+          data: [
+            "Treasury Bills · 90 Days",
+            "₦5,000,000",
+            "17.50%",
+            "Active",
+            "14 Jun, 2024 | 5:24 PM",
+          ],
         },
         {
-          data: ["Fixed Deposit · 180 Days", "₦3,500,000", "14.00%", "Active", "24 Jun, 2024 | 5:24 PM"],
+          data: [
+            "Fixed Deposit · 180 Days",
+            "₦3,500,000",
+            "14.00%",
+            "Active",
+            "24 Jun, 2024 | 5:24 PM",
+          ],
         },
         {
-          data: ["Treasury Bills · 360 Days", "₦1,000,000", "17.50%", "Inactive", "24 Jun, 2024 | 5:24 PM"],
+          data: [
+            "Treasury Bills · 360 Days",
+            "₦1,000,000",
+            "17.50%",
+            "Inactive",
+            "24 Jun, 2024 | 5:24 PM",
+          ],
         },
       ],
       pagination: { type: "sychronous", limit: 8 },
     }),
-    []
+    [],
   );
 
   return (
@@ -48,19 +72,28 @@ export default function DemoPage() {
               Moneylot Components Demo
             </h1>
             <p className="text-sm text-zinc-600">
-              Ported from <span className="font-medium">moneylot-portal-v1</span>:
-              Table3, Filter modal, OTP modal.
+              Ported from{" "}
+              <span className="font-medium">moneylot-portal-v1</span>: Table3,
+              Filter modal, OTP modal.
             </p>
           </div>
           <div className="flex gap-2">
-            <Button.SmSecondary label="Open OTP Modal" onClick={() => setOtpOpen(true)} />
-            <Button.SmPrimary label="Open Filter" onClick={() => setFilterOpen(true)} />
+            <Button.SmSecondary
+              label="Open OTP Modal"
+              onClick={() => setOtpOpen(true)}
+            />
+            <Button.SmPrimary
+              label="Open Filter"
+              onClick={() => setFilterOpen(true)}
+            />
           </div>
         </div>
 
         <div className="mt-6 rounded-xl bg-white p-5 border border-zinc-200">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-zinc-900">My Investments</h2>
+            <h2 className="text-sm font-semibold text-zinc-900">
+              My Investments
+            </h2>
             <button
               type="button"
               onClick={() => setFilterOpen(true)}
@@ -71,7 +104,11 @@ export default function DemoPage() {
           </div>
 
           <div className="mt-4">
-            <Table3 headers={table.headers} data={table.data} pagination={table.pagination} />
+            <Table3
+              headers={table.headers}
+              data={table.data}
+              pagination={table.pagination}
+            />
           </div>
         </div>
       </div>
@@ -98,4 +135,3 @@ export default function DemoPage() {
     </div>
   );
 }
-

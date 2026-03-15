@@ -6,7 +6,10 @@ import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import Pills from "@/components/ui/Pills";
 import { imagesAndIcons } from "@/constants/imagesAndIcons";
-import { getInvestmentDetail, InvestmentDetailDto } from "@/services/webinvestment";
+import {
+  getInvestmentDetail,
+  InvestmentDetailDto,
+} from "@/services/webinvestment";
 import { ApiError } from "@/lib/apiClient";
 import { formatNGN } from "@/lib/investment";
 import { isAbortError } from "@/lib/isAbortError";
@@ -45,10 +48,17 @@ export default function InvestmentDetails({
       } catch (e) {
         if (isAbortError(e)) return;
         if (e instanceof ApiError) {
-          console.log("[Investment Detail] get-investment-detail error:", e.message, e.details);
+          console.log(
+            "[Investment Detail] get-investment-detail error:",
+            e.message,
+            e.details,
+          );
           setError(e.message);
         } else if (e instanceof Error) {
-          console.log("[Investment Detail] get-investment-detail error:", e.message);
+          console.log(
+            "[Investment Detail] get-investment-detail error:",
+            e.message,
+          );
           setError(e.message);
         } else {
           console.log("[Investment Detail] get-investment-detail error:", e);
@@ -63,21 +73,31 @@ export default function InvestmentDetails({
   }, [investmentId]);
 
   const effectiveStatus = useMemo<InvestmentStatus>(() => {
-    const raw =
-      (typeof detail?.status === "string" ? detail.status : status || "active")
-        .toLowerCase()
-        .trim();
-    return raw === "matured" ? "matured" : raw === "inactive" ? "inactive" : "active";
+    const raw = (
+      typeof detail?.status === "string" ? detail.status : status || "active"
+    )
+      .toLowerCase()
+      .trim();
+    return raw === "matured"
+      ? "matured"
+      : raw === "inactive"
+        ? "inactive"
+        : "active";
   }, [detail?.status, status]);
 
   const isMatured = effectiveStatus === "matured";
 
   const rows: Array<{ label: string; value: React.ReactNode }> = useMemo(() => {
     const d = detail;
-    const safeText = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : "-");
-    const safeNum = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : 0);
+    const safeText = (v: unknown) =>
+      typeof v === "string" && v.trim() ? v.trim() : "-";
+    const safeNum = (v: unknown) =>
+      typeof v === "number" && Number.isFinite(v) ? v : 0;
     return [
-      { label: "Investment Amount", value: d ? formatNGN(safeNum(d.investmentAmount)) : "-" },
+      {
+        label: "Investment Amount",
+        value: d ? formatNGN(safeNum(d.investmentAmount)) : "-",
+      },
       {
         label: "Current Balance",
         value: d
@@ -86,15 +106,21 @@ export default function InvestmentDetails({
                 (d as any).outstandingBalance ??
                   (d as any).outstanding_balance ??
                   (d as any).investmentBalance ??
-                  d.investmentAmount
-              )
+                  d.investmentAmount,
+              ),
             )
           : "-",
       },
       { label: "Interest Rate", value: d ? safeText(d.investmentRate) : "-" },
       { label: "Investment Type", value: d ? safeText(d.investmentType) : "-" },
-      { label: "Investment Period", value: d ? safeText(d.investmentPeriod) : "-" },
-      { label: "Expected Returns", value: d ? formatNGN(safeNum(d.expectedReturn)) : "-" },
+      {
+        label: "Investment Period",
+        value: d ? safeText(d.investmentPeriod) : "-",
+      },
+      {
+        label: "Expected Returns",
+        value: d ? formatNGN(safeNum(d.expectedReturn)) : "-",
+      },
       { label: "Date Created", value: d ? safeText(d.dateCreated) : "-" },
       { label: "Maturity Date", value: d ? safeText(d.maturityDate) : "-" },
       {
@@ -111,8 +137,8 @@ export default function InvestmentDetails({
                 effectiveStatus === "matured"
                   ? "Matured"
                   : effectiveStatus === "active"
-                  ? "Active"
-                  : "Inactive"
+                    ? "Active"
+                    : "Inactive"
               }
             />
           </div>
@@ -157,7 +183,9 @@ export default function InvestmentDetails({
 
       {/* Details */}
       <div className="mt-6">
-        <p className="text-[11px] font-semibold text-[#2E2E2E]">Investment Details</p>
+        <p className="text-[11px] font-semibold text-[#2E2E2E]">
+          Investment Details
+        </p>
 
         {error ? (
           <div className="mt-3 rounded-[10px] border border-[#F2C6C6] bg-[#FFF5F5] px-4 py-3 text-[11px] text-[#D32F2F]">
@@ -202,7 +230,9 @@ export default function InvestmentDetails({
                 textColor="text-[#2E2E2E]"
                 className="border border-[#EEEEEE] rounded-[8px] font-medium"
                 onClick={() =>
-                  router.push(`/dashboard/withdrawals/${investmentId}?status=matured`)
+                  router.push(
+                    `/dashboard/withdrawals/${investmentId}?status=matured`,
+                  )
                 }
               />
             ) : null}
@@ -212,27 +242,26 @@ export default function InvestmentDetails({
               width={155}
               fontSize="text-[13px]"
               className="rounded-[8px] font-medium"
-              onClick={() => router.push(`/dashboard/investments/${investmentId}/rollover`)}
-            />
-          </>
-        ) : (
-          effectiveStatus !== "inactive" ? (
-            <Button.SmPrimary
-              label="Withdraw Funds"
-              height={40}
-              width={155}
-              fontSize="text-[13px]"
-              className="rounded-[8px] font-medium"
               onClick={() =>
-                router.push(
-                  `/dashboard/withdrawals/${investmentId}?status=${effectiveStatus}&early=1`
-                )
+                router.push(`/dashboard/investments/${investmentId}/rollover`)
               }
             />
-          ) : null
-        )}
+          </>
+        ) : effectiveStatus !== "inactive" ? (
+          <Button.SmPrimary
+            label="Withdraw Funds"
+            height={40}
+            width={155}
+            fontSize="text-[13px]"
+            className="rounded-[8px] font-medium"
+            onClick={() =>
+              router.push(
+                `/dashboard/withdrawals/${investmentId}?status=${effectiveStatus}&early=1`,
+              )
+            }
+          />
+        ) : null}
       </div>
     </div>
   );
 }
-
