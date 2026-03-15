@@ -22,5 +22,94 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Hide native calendar icon for date inputs (we render a custom icon) */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  display: none;
+}
+input[type="date"]::-webkit-inner-spin-button {
+  display: none;
+}
+
+/* Moneylot portal utility animations (ported) */
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.fade-out {
+  animation: fadeOut 0.25s ease-in-out forwards;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+.slide-in-right {
+  animation: slideInRight 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.slide-out-right {
+  animation: slideOutRight 0.34s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes slideInRight {
+  0% {
+    transform: translateX(90px);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutRight {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateX(90px);
+    opacity: 0;
+  }
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hidden {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Get Started: label text should be black */
+.get-started-labels-black label {
+  color: #2e2e2e !important;
+}
+
+/* App-wide: upscale tiny text to 14px (scoped via wrapper) */
+.scale-small-text .text-\[11px\],
+.scale-small-text .text-\[12px\] {
+  font-size: 14px !important;
 }
