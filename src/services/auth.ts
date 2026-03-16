@@ -1,4 +1,4 @@
-import { apiPostJson } from "@/lib/apiClient";
+import { apiPostJson, ApiError } from "@/lib/apiClient";
 import type { AuthTokenResponse } from "@/services/signup";
 
 export type ValidateOtpRequest = {
@@ -20,6 +20,60 @@ export async function securityLogin(payload: LoginRequest) {
   return await apiPostJson<AuthTokenResponse>("/api/v1/auth/login", payload, {
     headers: { Authorization: "" },
   });
+}
+
+export type VerifyEmailAddressRequest = {
+  type: "personal" | "business";
+  emailAddress: string;
+  businessName: string;
+};
+
+export type VerifyEmailAddressData = {
+  userId?: number;
+  emailVerified?: boolean;
+  completed?: boolean;
+  verified?: boolean;
+  hasPin?: boolean;
+  bvn?: boolean;
+  stage1?: boolean;
+  stage2?: boolean;
+  stage3?: boolean;
+  stage3_5?: boolean;
+  stage4?: boolean;
+};
+
+export type VerifyEmailAddressResponse = {
+  status?: boolean;
+  data?: VerifyEmailAddressData | null;
+  message?: string | null;
+  error?: unknown;
+  statusCode?: number;
+};
+
+// Note: Backend may return 409 for "email exists" with useful stage flags.
+// We treat that as a normal response (not an error) for onboarding resume.
+export async function verifyEmailAddress(
+  payload: VerifyEmailAddressRequest,
+): Promise<VerifyEmailAddressResponse> {
+  try {
+    return await apiPostJson<VerifyEmailAddressResponse>(
+      "/api/v1/auth/verify-email-address",
+      {
+        type: payload.type,
+        emailAddress: (payload.emailAddress || "").trim(),
+        businessName: payload.businessName ?? "",
+      },
+      { headers: { Authorization: "" } },
+    );
+  } catch (e) {
+    if (e instanceof ApiError) {
+      const details = e.details;
+      if (details && typeof details === "object") {
+        return details as VerifyEmailAddressResponse;
+      }
+    }
+    throw e;
+  }
 }
 
 export type ResetWebPasswordRequest = {

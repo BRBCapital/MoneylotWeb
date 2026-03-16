@@ -4,17 +4,16 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
-import { SelectField } from "@/components/molecules/forms/Field";
 import { imagesAndIcons } from "@/constants/imagesAndIcons";
 import { ApiError } from "@/lib/apiClient";
 import { uploadToFilestackS3 } from "@/services/filestack";
-import { getIdentityTypes, verifyNin } from "@/services/verification";
+import { verifyNin } from "@/services/verification";
 import { showErrorToast, showSuccessToast } from "@/state/toastState";
 
 type IdentityVerificationModalProps = {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  onProceed?: (data: { typeId: number; nin: string; file: File }) => void | Promise<void>;
+  onProceed?: (data: { nin: string; file: File }) => void | Promise<void>;
 };
 
 export default function IdentityVerificationModal({
@@ -22,15 +21,10 @@ export default function IdentityVerificationModal({
   setOpen,
   onProceed,
 }: IdentityVerificationModalProps) {
-  const [documentType, setDocumentType] = useState(""); // typeId as string
   const [idNumber, setIdNumber] = useState(""); // nin
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const [identityTypesLoading, setIdentityTypesLoading] = useState(false);
-  const [identityTypesError, setIdentityTypesError] = useState<string | null>(null);
-  const [identityTypes, setIdentityTypes] = useState<Array<{ id: number; name: string }>>([]);
 
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -41,11 +35,10 @@ export default function IdentityVerificationModal({
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const canProceed = useMemo(() => {
-    if (!documentType) return false;
     if (!idNumber.trim()) return false;
     if (!uploadedUrl) return false;
     return true;
-  }, [documentType, idNumber, uploadedUrl]);
+  }, [idNumber, uploadedUrl]);
 
   function validateNin(ninRaw: string): string | null {
     const nin = (ninRaw || "").trim();
@@ -115,34 +108,7 @@ export default function IdentityVerificationModal({
     return validTypes.includes(file.type);
   };
 
-  useEffect(() => {
-    if (!open) return;
-    const ac = new AbortController();
-    (async () => {
-      try {
-        setIdentityTypesError(null);
-        setIdentityTypesLoading(true);
-        const res = await getIdentityTypes(ac.signal);
-        if (Array.isArray(res.data)) setIdentityTypes(res.data);
-        else setIdentityTypes([]);
-      } catch (e) {
-        if (e instanceof ApiError) setIdentityTypesError(e.message);
-        else if (e instanceof Error) setIdentityTypesError(e.message);
-        else setIdentityTypesError("Unable to load identity types");
-      } finally {
-        setIdentityTypesLoading(false);
-      }
-    })();
-    return () => ac.abort();
-  }, [open]);
-
-  const identityOptions = useMemo(
-    () => identityTypes.map((t) => ({ label: t.name, value: String(t.id) })),
-    [identityTypes]
-  );
-
   const resetForm = () => {
-    setDocumentType("");
     setIdNumber("");
     setSelectedFile(null);
     setDragActive(false);
@@ -156,7 +122,6 @@ export default function IdentityVerificationModal({
   const handleProceed = async () => {
     const nin = idNumber.trim();
     console.log("[Identity] proceed clicked", {
-      documentType,
       ninLen: nin.length,
       fileName: selectedFile?.name || null,
       fileType: selectedFile?.type || null,
@@ -164,11 +129,6 @@ export default function IdentityVerificationModal({
     });
     if (!uploadedUrl) {
       setSubmitError(uploading ? "Uploading document..." : "Upload a document");
-      return;
-    }
-    const typeId = Number(documentType);
-    if (!Number.isFinite(typeId) || typeId <= 0) {
-      setSubmitError("Select a valid identity type");
       return;
     }
     const ninErr = validateNin(nin);
@@ -180,14 +140,14 @@ export default function IdentityVerificationModal({
     setSubmitError(null);
     try {
       setIsSubmitting(true);
-      const payload = { typeId, nin, ninUrl: uploadedUrl };
+      const payload = { nin, ninUrl: uploadedUrl };
       console.log("[Identity] filestack upload url:", uploadedUrl);
       console.log("[Identity] verify-NIN payload:", payload);
 
       if (onProceed) {
         // keep callback compatibility with local file
         if (!selectedFile) throw new Error("Missing file");
-        await onProceed({ typeId, nin, file: selectedFile });
+        await onProceed({ nin, file: selectedFile });
       } else {
         const res = await verifyNin(payload);
         console.log("[Identity] verify-NIN response:", res);
@@ -246,23 +206,6 @@ export default function IdentityVerificationModal({
         </div>
 
         <div className="space-y-4">
-          {/* Valid ID */}
-          <div>
-            <SelectField
-              label="Valid ID"
-              placeholder="Select document"
-              value={documentType}
-              onChange={setDocumentType}
-              options={identityOptions}
-            />
-            {identityTypesLoading ? (
-              <p className="mt-2 text-[11px] text-[#5F6368]">Loading identity types...</p>
-            ) : null}
-            {identityTypesError ? (
-              <p className="mt-2 text-[11px] text-[#E53935]">{identityTypesError}</p>
-            ) : null}
-          </div>
-
           {/* ID Number */}
           <div>
             <label className="block text-[12px] font-medium text-[#2E2E2E] mb-2">

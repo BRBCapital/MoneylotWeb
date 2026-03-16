@@ -23,12 +23,12 @@ import InvestmentConfirmationTable from "@/components/organisms/onboarding/Inves
 import PaymentDetailsTable from "@/components/organisms/onboarding/PaymentDetailsTable";
 import Image from "next/image";
 import { imagesAndIcons } from "@/constants/imagesAndIcons";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { accountCreationWeb } from "@/services/signup";
 import { ApiError } from "@/lib/apiClient";
 import { checkPasswordValidity } from "@/lib/password";
 import { getAccountTypes } from "@/services/account";
-import { securityLogin } from "@/services/auth";
+import { securityLogin, verifyEmailAddress } from "@/services/auth";
 import { webGenerateOtp, webValidateOtp } from "@/services/otp";
 import {
   createInvestment,
@@ -60,6 +60,13 @@ import { isAbortError } from "@/lib/isAbortError";
 import { secureGetJson, secureRemove, secureSetJson } from "@/lib/secureStorage";
 import IconCheckbox from "@/components/ui/IconCheckbox";
 import { City, State } from "country-state-city";
+import Stage1AccountCreation from "@/app/get-started/_components/Stage1AccountCreation";
+import Stage2Verification from "@/app/get-started/_components/Stage2Verification";
+import Stage3BankDetails from "@/app/get-started/_components/Stage3BankDetails";
+import Stage4Investment from "@/app/get-started/_components/Stage4Investment";
+import Stage5ConfirmInvestment from "@/app/get-started/_components/Stage5ConfirmInvestment";
+import Stage6Payment from "@/app/get-started/_components/Stage6Payment";
+import Stage7Processing from "@/app/get-started/_components/Stage7Processing";
 
 const GET_STARTED_PERSIST_KEY = "moneylot_get_started_flow_v1";
 
@@ -108,6 +115,7 @@ function normalizePhone(countryCode: string, phoneNumber: string) {
 
 export default function GetStartedPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const MIN_INVESTMENT_NGN = 50;
   const [stage, setStage] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7>(1);
   const [otpOpen, setOtpOpen] = useState(false);
@@ -385,6 +393,23 @@ export default function GetStartedPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Support resuming onboarding after timeout/logout from server-provided stage flags.
+  useEffect(() => {
+    if (!flowHydrated) return;
+    const raw = searchParams.get("resumeStage");
+    if (!raw) return;
+    const n = Number(raw);
+    if (n === 35) {
+      setStage(3);
+      setPinOpen(true);
+      return;
+    }
+    if (Number.isFinite(n) && n >= 1 && n <= 7) {
+      setStage(n as any);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [flowHydrated, searchParams]);
+
   useEffect(() => {
     if (!flowHydrated) return;
     const payload = {
@@ -467,6 +492,84 @@ export default function GetStartedPage() {
     selectedRatePa !== null &&
     Number.isFinite(selectedRatePa);
 
+  const onStage4GoDashboard = () => {
+    void secureRemove(GET_STARTED_PERSIST_KEY);
+    router.push("/dashboard");
+  };
+
+  const onStage4AmountChange = (v: string) => {
+    setInvestmentAmount(v);
+  };
+
+  const onStage4SelectRate = (id: number) => {
+    setSelectedRateId(id);
+    setExpectedReturnError(null);
+    setExpectedReturn(null);
+    setTotalAtMaturity(null);
+    setMaturityDateText(null);
+  };
+
+  const onStage4ReviewConfirm = async () => {
+    setExpectedReturnError(null);
+    setExpectedReturn(null);
+    setTotalAtMaturity(null);
+    setMaturityDateText(null);
+    const amt = parseMoney(investmentAmount);
+    if (!selectedTenorId) return;
+    if (amt < MIN_INVESTMENT_NGN) {
+      setExpectedReturnError("Minimum investment is ₦50");
+      return;
+    }
+    try {
+      setExpectedReturnLoading(true);
+      const res = await getExpectedReturn({
+        tenorId: selectedTenorId,
+        amount: amt,
+      });
+      console.log("[Stage 4] get-expected-return response:", res);
+      setExpectedReturn(res.expectedReturn);
+      setTotalAtMaturity(
+        typeof res.totalAtMaturity === "number" ? res.totalAtMaturity : null
+      );
+      setMaturityDateText(
+        typeof res.maturityDate === "string" ? res.maturityDate : null
+      );
+      setAcknowledgeInvestment(false);
+      setCreateInvestmentError(null);
+      setStage(5);
+    } catch (e) {
+      if (e instanceof ApiError) setExpectedReturnError(e.message);
+      else if (e instanceof Error) setExpectedReturnError(e.message);
+      else setExpectedReturnError("Unable to compute expected return.");
+    } finally {
+      setExpectedReturnLoading(false);
+    }
+  };
+
+  const onStage5ProceedToPayment = async () => {
+    setCreateInvestmentError(null);
+    if (!acknowledgeInvestment) {
+      setCreateInvestmentError("Please confirm to continue");
+      return;
+    }
+    if (!selectedTenorId || !selectedTypeId) {
+      setCreateInvestmentError("Missing tenor selection. Please go back.");
+      return;
+    }
+    if (expectedReturn == null || !Number.isFinite(expectedReturn)) {
+      setCreateInvestmentError("Missing expected return. Please go back.");
+      return;
+    }
+    setInvestmentPinOpen(true);
+  };
+
+  const onStage6MadePayment = () => setStage(7);
+
+  const onStage7GoDashboard = () => {
+    void secureRemove(GET_STARTED_PERSIST_KEY);
+    router.push("/dashboard");
+  };
+
   const progressStage = stage <= 4 ? stage : 4;
 
   useEffect(() => {
@@ -531,6 +634,351 @@ export default function GetStartedPage() {
     confirmPassword,
   ]);
 
+  const onStage1FirstNameChange = (v: string) => {
+    setFirstName(v);
+    if (stage1FieldErrors.firstName) {
+      setStage1FieldErrors((p) => ({ ...p, firstName: undefined }));
+    }
+  };
+  const onStage1LastNameChange = (v: string) => {
+    setLastName(v);
+    if (stage1FieldErrors.lastName) {
+      setStage1FieldErrors((p) => ({ ...p, lastName: undefined }));
+    }
+  };
+  const onStage1AccountTypeChange = (v: string) => {
+    setAccountType(v);
+    if (stage1FieldErrors.accountType) {
+      setStage1FieldErrors((p) => ({ ...p, accountType: undefined }));
+    }
+  };
+  const onStage1CountryCodeChange = (v: string) => {
+    setCountryCode(v);
+    if (stage1FieldErrors.phoneNumber) {
+      setStage1FieldErrors((p) => ({ ...p, phoneNumber: undefined }));
+    }
+  };
+  const onStage1PhoneNumberChange = (v: string) => {
+    setPhoneNumber(v);
+    if (stage1FieldErrors.phoneNumber) {
+      setStage1FieldErrors((p) => ({ ...p, phoneNumber: undefined }));
+    }
+  };
+  const onStage1EmailChange = (v: string) => {
+    setEmail(v);
+    if (stage1FieldErrors.email) {
+      setStage1FieldErrors((p) => ({ ...p, email: undefined }));
+    }
+  };
+  const onStage1PasswordChange = (v: string) => {
+    setPassword(v);
+    if (stage1FieldErrors.password) {
+      setStage1FieldErrors((p) => ({ ...p, password: undefined }));
+    }
+  };
+  const onStage1ConfirmPasswordChange = (v: string) => {
+    setConfirmPassword(v);
+    if (stage1FieldErrors.confirmPassword) {
+      setStage1FieldErrors((p) => ({ ...p, confirmPassword: undefined }));
+    }
+  };
+  const onStage1AcceptedTermsChange = (next: boolean) => {
+    setAcceptedTerms(next);
+    if (stage1FieldErrors.acceptedTerms) {
+      setStage1FieldErrors((p) => ({ ...p, acceptedTerms: undefined }));
+    }
+  };
+
+  const onStage1Continue = async () => {
+    setStage1Error(null);
+    setStage1FieldErrors({});
+
+    // Client-side checks (mirror backend expectations)
+    const errs: typeof stage1FieldErrors = {};
+    if (!firstName.trim()) errs.firstName = "First name is required";
+    else if (!isValidPersonName(firstName))
+      errs.firstName =
+        "First name can only contain letters, hyphen (-) and apostrophe (')";
+
+    if (!lastName.trim()) errs.lastName = "Last name is required";
+    else if (!isValidPersonName(lastName))
+      errs.lastName =
+        "Last name can only contain letters, hyphen (-) and apostrophe (')";
+
+    if (!accountType.trim()) errs.accountType = "Account type is required";
+    if (!stage1Phone.trim()) errs.phoneNumber = "Phone number is required";
+    if (!isValidEmail(email)) errs.email = "Enter a valid email address";
+    if (!acceptedTerms) errs.acceptedTerms = "Please confirm to continue";
+
+    const pwdCheck = checkPasswordValidity(password);
+    if (pwdCheck !== true) errs.password = pwdCheck;
+    if (!confirmPassword.trim()) errs.confirmPassword = "Confirm your password";
+    else if (confirmPassword !== password)
+      errs.confirmPassword = "Passwords do not match";
+
+    if (Object.keys(errs).length > 0) {
+      setStage1FieldErrors(errs);
+      return;
+    }
+
+    try {
+      setStage1Loading(true);
+      const res = await accountCreationWeb({
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        accountType: accountType.trim(),
+        phoneNumber: stage1Phone,
+        emailAddress: email.trim(),
+        password,
+        confirmPassword,
+      });
+      console.log("[Stage 1] account-creation-web response:", res);
+
+      const msgLower = String(res?.message || "").toLowerCase();
+      const looksLikeExistingEmail =
+        msgLower.includes("email") &&
+        (msgLower.includes("already exist") ||
+          msgLower.includes("already exists") ||
+          msgLower.includes("already registered") ||
+          msgLower.includes("already in use"));
+
+      // Some backend versions return existing-email as { status: false, statusCode: 400/409 }
+      // without throwing. Treat it as a resume-onboarding signal.
+      const statusCode = (res as any)?.statusCode;
+      if (
+        !res?.status &&
+        (looksLikeExistingEmail || statusCode === 400 || statusCode === 409)
+      ) {
+        try {
+          const emailValue = email.trim();
+          const v = await verifyEmailAddress({
+            type: "personal",
+            emailAddress: emailValue,
+            businessName: "",
+          });
+          const d: any = v?.data || null;
+
+          // If PIN is already created, user should just login normally.
+          if (Boolean(d?.stage3_5)) {
+            showSuccessToast("Success", "Continue your onboarding process");
+            router.push("/login");
+            return;
+          }
+
+          // Attempt background login to continue onboarding.
+          try {
+            const loginRes = await securityLogin({
+              emailAddress: emailValue,
+              password,
+            });
+            console.log("[Stage 1] auth/login (resume) response:", loginRes);
+            if (!loginRes?.status || !loginRes?.data?.sessionToken) {
+              throw new Error("Unable to create login session");
+            }
+
+            setUserEmail(emailValue);
+            setAuthSession({
+              accountId: loginRes.data.accountId,
+              userId: loginRes.data.userId,
+              firstName: loginRes.data.firstName,
+              lastName: loginRes.data.lastName,
+              refreshToken: loginRes.data.refreshToken,
+              sessionToken: loginRes.data.sessionToken,
+              expires: loginRes.data.expires,
+              refreshTokenExpiryTime: loginRes.data.refreshTokenExpiryTime,
+              enforcePassword: loginRes.data.enforcePassword,
+              kycStatus:
+                typeof (loginRes.data as any).kycStatus === "number"
+                  ? (loginRes.data as any).kycStatus
+                  : Number.isFinite(Number((loginRes.data as any).kycStatus))
+                    ? Number((loginRes.data as any).kycStatus)
+                    : undefined,
+              ninVerified: Boolean(
+                (loginRes.data as any).ninVerified ??
+                  (loginRes.data as any).isNINVerified,
+              ),
+            });
+          } catch {
+            setStage1FieldErrors((p) => ({ ...p, password: "Wrong password" }));
+            return;
+          }
+
+          showSuccessToast("Success", "Continue your onboarding process");
+
+          const stage1Done = Boolean(d?.stage1);
+          const stage2Done = Boolean(d?.stage2);
+          const stage3Done = Boolean(d?.stage3);
+
+          if (stage1Done && !stage2Done) {
+            setStage(2);
+            clearStage1Form();
+            return;
+          }
+          if (stage2Done && !stage3Done) {
+            setStage(3);
+            clearStage1Form();
+            clearStage2Form();
+            return;
+          }
+          if (stage3Done && !Boolean(d?.stage3_5)) {
+            setStage(3);
+            setPinOpen(true);
+            clearStage1Form();
+            clearStage2Form();
+            clearStage3Form();
+            return;
+          }
+
+          router.push("/login");
+          return;
+        } catch (inner) {
+          const msg =
+            inner instanceof Error
+              ? inner.message
+              : "Something went wrong. Please try again.";
+          setStage1Error(msg);
+          return;
+        }
+      }
+
+      if (!res?.status) {
+        setStage1Error(res?.message || "Unable to create account. Please try again.");
+        return;
+      }
+
+      const userId = res?.data?.userId;
+      const accountId = res?.data?.accountId;
+      if (!userId || !accountId) {
+        return setStage1Error("Invalid signup response. Please try again.");
+      }
+      setStage1SignupContext({
+        userId,
+        accountId,
+        emailAddress: email.trim(),
+        password,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+      });
+      setUserEmail(email.trim());
+      setOtpOpen(true);
+      // Persist needed context, but clear Stage 1 inputs
+      // so navigating back shows an empty form.
+      clearStage1Form();
+    } catch (e) {
+      // If the email already exists, treat it as a resume onboarding flow.
+      if (e instanceof ApiError && (e.status === 409 || e.status === 400)) {
+        try {
+          const emailValue = email.trim();
+          const msgLower = String(e.message || "").toLowerCase();
+          const looksLikeExistingEmail =
+            msgLower.includes("email") &&
+            (msgLower.includes("already exist") ||
+              msgLower.includes("already exists") ||
+              msgLower.includes("already registered") ||
+              msgLower.includes("already in use"));
+          if (!looksLikeExistingEmail && e.status !== 409) {
+            // Not an "email exists" case; fall back to normal error handling below.
+            throw e;
+          }
+          const v = await verifyEmailAddress({
+            type: "personal",
+            emailAddress: emailValue,
+            businessName: "",
+          });
+          const d: any = v?.data || null;
+
+          // If PIN is already created, user should just login normally.
+          if (Boolean(d?.stage3_5)) {
+            showSuccessToast("Success", "Continue your onboarding process");
+            router.push("/login");
+            return;
+          }
+
+          // Attempt background login to continue onboarding.
+          try {
+            const loginRes = await securityLogin({
+              emailAddress: emailValue,
+              password,
+            });
+            console.log("[Stage 1] auth/login (resume) response:", loginRes);
+            if (!loginRes?.status || !loginRes?.data?.sessionToken) {
+              throw new Error("Unable to create login session");
+            }
+
+            setUserEmail(emailValue);
+            setAuthSession({
+              accountId: loginRes.data.accountId,
+              userId: loginRes.data.userId,
+              firstName: loginRes.data.firstName,
+              lastName: loginRes.data.lastName,
+              refreshToken: loginRes.data.refreshToken,
+              sessionToken: loginRes.data.sessionToken,
+              expires: loginRes.data.expires,
+              refreshTokenExpiryTime: loginRes.data.refreshTokenExpiryTime,
+              enforcePassword: loginRes.data.enforcePassword,
+              kycStatus:
+                typeof (loginRes.data as any).kycStatus === "number"
+                  ? (loginRes.data as any).kycStatus
+                  : Number.isFinite(Number((loginRes.data as any).kycStatus))
+                    ? Number((loginRes.data as any).kycStatus)
+                    : undefined,
+              ninVerified: Boolean(
+                (loginRes.data as any).ninVerified ??
+                  (loginRes.data as any).isNINVerified,
+              ),
+            });
+          } catch {
+            setStage1FieldErrors((p) => ({ ...p, password: "Wrong password" }));
+            return;
+          }
+
+          showSuccessToast("Success", "Continue your onboarding process");
+
+          const stage1Done = Boolean(d?.stage1);
+          const stage2Done = Boolean(d?.stage2);
+          const stage3Done = Boolean(d?.stage3);
+
+          if (stage1Done && !stage2Done) {
+            setStage(2);
+            clearStage1Form();
+            return;
+          }
+          if (stage2Done && !stage3Done) {
+            setStage(3);
+            clearStage1Form();
+            clearStage2Form();
+            return;
+          }
+          if (stage3Done && !Boolean(d?.stage3_5)) {
+            setStage(3);
+            setPinOpen(true);
+            clearStage1Form();
+            clearStage2Form();
+            clearStage3Form();
+            return;
+          }
+
+          // Fallback: send user to login.
+          router.push("/login");
+          return;
+        } catch (inner) {
+          const msg =
+            inner instanceof Error
+              ? inner.message
+              : "Something went wrong. Please try again.";
+          setStage1Error(msg);
+          return;
+        }
+      }
+
+      if (e instanceof ApiError) setStage1Error(e.message);
+      else if (e instanceof Error) setStage1Error(e.message);
+      else setStage1Error("Something went wrong. Please try again.");
+    } finally {
+      setStage1Loading(false);
+    }
+  };
+
   const stage2CanSubmit = useMemo(() => {
     if (!bvn.trim()) return false;
     if (!/^\d{4}-\d{2}-\d{2}$/.test(dob.trim())) return false;
@@ -541,11 +989,168 @@ export default function GetStartedPage() {
     return true;
   }, [bvn, dob, country, address, city, state]);
 
+  const onStage2DobChange = (v: string) => {
+    setDob(v);
+    if (stage2FieldErrors.dob) {
+      setStage2FieldErrors((p) => ({ ...p, dob: undefined }));
+    }
+  };
+  const onStage2BvnChange = (v: string) => {
+    setBvn(v);
+    if (stage2FieldErrors.bvn) {
+      setStage2FieldErrors((p) => ({ ...p, bvn: undefined }));
+    }
+  };
+  const onStage2CountryChange = (v: string) => {
+    setCountry(v);
+    setStateCode("");
+    setState_("");
+    setCity("");
+    if (stage2FieldErrors.country) {
+      setStage2FieldErrors((p) => ({ ...p, country: undefined }));
+    }
+  };
+  const onStage2AddressChange = (v: string) => {
+    setAddress(v);
+    if (stage2FieldErrors.address) {
+      setStage2FieldErrors((p) => ({ ...p, address: undefined }));
+    }
+  };
+  const onStage2StateCodeChange = (code: string) => {
+    setStateCode(code);
+    const found = stateOptions.find((s) => s.value === code);
+    setState_(found?.label || "");
+    setCity("");
+    if (stage2FieldErrors.state) {
+      setStage2FieldErrors((p) => ({ ...p, state: undefined }));
+    }
+  };
+  const onStage2CityChange = (v: string) => {
+    setCity(v);
+    if (stage2FieldErrors.city) {
+      setStage2FieldErrors((p) => ({ ...p, city: undefined }));
+    }
+  };
+
+  const onStage2Continue = async () => {
+    setStage2Error(null);
+    setStage2FieldErrors({});
+
+    const dobValue = dob.trim();
+    const errs: typeof stage2FieldErrors = {};
+    if (!bvn.trim()) errs.bvn = "BVN is required";
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dobValue)) {
+      errs.dob = "Date of birth must be in YYYY-MM-DD format";
+    }
+    if (!country.trim()) errs.country = "Country of residence is required";
+    if (!address.trim()) errs.address = "Residential address is required";
+    if (!state.trim()) errs.state = "State is required";
+    if (!city.trim()) errs.city = "City is required";
+    if (Object.keys(errs).length > 0) {
+      setStage2FieldErrors(errs);
+      return;
+    }
+
+    try {
+      setStage2Loading(true);
+      const res = await validateIdentityAddress({
+        bvn: bvn.trim(),
+        dateOfBirth: dobValue,
+        countryOfResidency: country.trim(),
+        residentialAddress: address.trim(),
+        city: city.trim(),
+        state: state.trim(),
+      });
+      console.log("[Stage 2] validate-identity-address response:", res);
+
+      showSuccessToast("Success", res?.message || "Identity verified successfully");
+      setStage(3);
+      // Clear Stage 2 inputs after successful submission.
+      clearStage2Form();
+    } catch (e) {
+      if (e instanceof ApiError) {
+        setStage2Error(e.message);
+      } else if (e instanceof Error) {
+        setStage2Error(e.message);
+      } else {
+        setStage2Error("Unable to validate identity. Please try again.");
+      }
+    } finally {
+      setStage2Loading(false);
+    }
+  };
+
   const selectedBank = useMemo(() => {
     if (!bankName) return null;
     const b = banks.find((x) => x.bankCode === bankName);
     return b || null;
   }, [bankName, banks]);
+
+  const onStage3BankNameChange = (v: string) => {
+    setBankName(v);
+    setStage3Error(null);
+    setAccountName("");
+    lastResolvedKeyRef.current = "";
+    if (stage3FieldErrors.bankName) {
+      setStage3FieldErrors((p) => ({ ...p, bankName: undefined }));
+    }
+    if (stage3FieldErrors.accountName) {
+      setStage3FieldErrors((p) => ({ ...p, accountName: undefined }));
+    }
+  };
+
+  const onStage3AccountNumberChange = (digits: string) => {
+    setAccountNumber(digits);
+    setStage3Error(null);
+    setAccountName("");
+    lastResolvedKeyRef.current = "";
+    if (stage3FieldErrors.accountNumber) {
+      setStage3FieldErrors((p) => ({ ...p, accountNumber: undefined }));
+    }
+    if (stage3FieldErrors.accountName) {
+      setStage3FieldErrors((p) => ({ ...p, accountName: undefined }));
+    }
+  };
+
+  const onStage3Continue = async () => {
+    setStage3Error(null);
+    setStage3FieldErrors({});
+    const bankCode = bankName.trim();
+    const acctNo = accountNumber.trim();
+    const acctName = accountName.trim();
+    const bankLabel = selectedBank?.bankName?.trim() || "";
+
+    const errs: typeof stage3FieldErrors = {};
+    if (!bankCode) errs.bankName = "Select a bank";
+    if (!acctNo) errs.accountNumber = "Account number is required";
+    else if (acctNo.length < 10) errs.accountNumber = "Enter a valid account number";
+    if (!acctName) errs.accountName = "Resolve account name to continue";
+    if (Object.keys(errs).length > 0) {
+      setStage3FieldErrors(errs);
+      return;
+    }
+
+    try {
+      setStage3Loading(true);
+      const res = await createWithdrawalAccount({
+        bankCode,
+        bankName: bankLabel || bankCode,
+        accountName: acctName,
+        accountNumber: acctNo,
+      });
+      console.log("[Stage 3] withdrawal/create response:", res);
+      showSuccessToast("Success", res?.message || "Bank details saved successfully");
+      setPinOpen(true);
+      // Clear Stage 3 inputs after successful submission.
+      clearStage3Form();
+    } catch (e) {
+      if (e instanceof ApiError) setStage3Error(e.message);
+      else if (e instanceof Error) setStage3Error(e.message);
+      else setStage3Error("Unable to save bank details. Please try again.");
+    } finally {
+      setStage3Loading(false);
+    }
+  };
 
   const bankOptions = useMemo(() => {
     return banks
@@ -703,7 +1308,11 @@ export default function GetStartedPage() {
 
     const seq = ++resolveSeqRef.current;
     setStage3Error(null);
+    setStage3FieldErrors((p) => ({ ...p, accountName: undefined }));
     setAccountResolveLoading(true);
+    // Cache the attempted key immediately to avoid duplicate calls
+    // (e.g. React StrictMode dev double-invokes effects).
+    lastResolvedKeyRef.current = key;
 
     (async () => {
       try {
@@ -716,6 +1325,13 @@ export default function GetStartedPage() {
 
         const data = res?.data as any;
         const resolved = (() => {
+          // v2 validate-account can return account name in `message` with `data: null`
+          const msg =
+            typeof (res as any)?.message === "string"
+              ? String((res as any).message).trim()
+              : "";
+          if (msg && !/^\s*successful\s*$/i.test(msg)) return msg;
+
           if (!data) return "";
           if (typeof data === "string") return data.trim();
           if (typeof data !== "object") return "";
@@ -738,13 +1354,15 @@ export default function GetStartedPage() {
           return;
         }
 
-        lastResolvedKeyRef.current = key;
         setAccountName(resolved);
+        setStage3FieldErrors((p) => ({ ...p, accountName: undefined }));
       } catch (e) {
         if (resolveSeqRef.current !== seq) return;
         setAccountName("");
         if (e instanceof ApiError) setStage3Error(e.message);
-        else if (e instanceof Error) setStage3Error(e.message);
+        else if (e instanceof TypeError && /failed to fetch/i.test(String(e.message || ""))) {
+          setStage3Error("Unable to validate account. Please check your connection and try again.");
+        } else if (e instanceof Error) setStage3Error(e.message);
         else setStage3Error("Unable to validate account. Please try again.");
       } finally {
         if (resolveSeqRef.current === seq) setAccountResolveLoading(false);
@@ -832,986 +1450,132 @@ export default function GetStartedPage() {
           label="Loading..."
         />
         {stage === 1 ? (
-          <>
-            {/* Align title with the left edge of the form card */}
-            <div className="mx-auto w-full max-w-[640px]">
-              <h1 className="text-left text-[16px] font-bold text-[#2E2E2E]">
-                Get Started!
-              </h1>
-            </div>
-
-            <OnboardingCard
-              stepLine={
-                <p className="text-[18px] font-medium text-[#2E2E2E]">
-                  Step <span className="text-[#2E2E2E]">1/</span>
-                  <span className="text-[#979797]">4</span>
-                  <span className="text-[#2E2E2E]"> - Account Creation</span>
-                </p>
-              }
-              title="Personal Information"
-              footer={
-                <div className="flex items-center justify-between gap-4">
-                  <div className="min-h-[16px]">
-                    {stage1Error ? (
-                      <p className="text-[11px] text-[#E53935]">
-                        {stage1Error}
-                      </p>
-                    ) : null}
-                  </div>
-                  <Button.SmPrimary
-                    label="Continue"
-                    width={160}
-                    height={38}
-                    loading={stage1Loading ? "Please wait" : undefined}
-                    disabled={stage1Loading}
-                    onClick={async () => {
-                      setStage1Error(null);
-                      setStage1FieldErrors({});
-
-                      // Client-side checks (mirror backend expectations)
-                      const errs: typeof stage1FieldErrors = {};
-                      if (!firstName.trim()) errs.firstName = "First name is required";
-                      else if (!isValidPersonName(firstName))
-                        errs.firstName =
-                          "First name can only contain letters, hyphen (-) and apostrophe (')";
-
-                      if (!lastName.trim()) errs.lastName = "Last name is required";
-                      else if (!isValidPersonName(lastName))
-                        errs.lastName =
-                          "Last name can only contain letters, hyphen (-) and apostrophe (')";
-
-                      if (!accountType.trim()) errs.accountType = "Account type is required";
-                      if (!stage1Phone.trim()) errs.phoneNumber = "Phone number is required";
-                      if (!isValidEmail(email)) errs.email = "Enter a valid email address";
-                      if (!acceptedTerms) errs.acceptedTerms = "Please confirm to continue";
-
-                      const pwdCheck = checkPasswordValidity(password);
-                      if (pwdCheck !== true) errs.password = pwdCheck;
-                      if (!confirmPassword.trim()) errs.confirmPassword = "Confirm your password";
-                      else if (confirmPassword !== password)
-                        errs.confirmPassword = "Passwords do not match";
-
-                      if (Object.keys(errs).length > 0) {
-                        setStage1FieldErrors(errs);
-                        return;
-                      }
-
-                      try {
-                        setStage1Loading(true);
-                        const res = await accountCreationWeb({
-                          firstName: firstName.trim(),
-                          lastName: lastName.trim(),
-                          accountType: accountType.trim(),
-                          phoneNumber: stage1Phone,
-                          emailAddress: email.trim(),
-                          password,
-                          confirmPassword,
-                        });
-                        console.log(
-                          "[Stage 1] account-creation-web response:",
-                          res,
-                        );
-                        const userId = res?.data?.userId;
-                        const accountId = res?.data?.accountId;
-                        if (!userId || !accountId) {
-                          return setStage1Error(
-                            "Invalid signup response. Please try again.",
-                          );
-                        }
-                        setStage1SignupContext({
-                          userId,
-                          accountId,
-                          emailAddress: email.trim(),
-                          password,
-                          firstName: firstName.trim(),
-                          lastName: lastName.trim(),
-                        });
-                        setUserEmail(email.trim());
-                        setOtpOpen(true);
-                        // Persist needed context, but clear Stage 1 inputs
-                        // so navigating back shows an empty form.
-                        clearStage1Form();
-                      } catch (e) {
-                        if (e instanceof ApiError) {
-                          setStage1Error(e.message);
-                        } else if (e instanceof Error) {
-                          setStage1Error(e.message);
-                        } else {
-                          setStage1Error(
-                            "Something went wrong. Please try again.",
-                          );
-                        }
-                      } finally {
-                        setStage1Loading(false);
-                      }
-                    }}
-                  />
-                </div>
-              }
-            >
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <TextField
-                  label="First Name"
-                  value={firstName}
-                  onChange={(v) => {
-                    setFirstName(sanitizeNameInput(v));
-                    if (stage1FieldErrors.firstName) {
-                      setStage1FieldErrors((p) => ({ ...p, firstName: undefined }));
-                    }
-                  }}
-                  error={stage1FieldErrors.firstName}
-                />
-                <TextField
-                  label="Last Name"
-                  value={lastName}
-                  onChange={(v) => {
-                    setLastName(sanitizeNameInput(v));
-                    if (stage1FieldErrors.lastName) {
-                      setStage1FieldErrors((p) => ({ ...p, lastName: undefined }));
-                    }
-                  }}
-                  error={stage1FieldErrors.lastName}
-                />
-              </div>
-
-              <div className="mt-4">
-                <SelectField
-                  label="Account Type"
-                  placeholder={
-                    accountTypesLoading
-                      ? "Loading account types..."
-                      : "Select account type"
-                  }
-                  value={accountType}
-                  onChange={(v) => {
-                    setAccountType(v);
-                    if (stage1FieldErrors.accountType) {
-                      setStage1FieldErrors((p) => ({ ...p, accountType: undefined }));
-                    }
-                  }}
-                  options={accountTypeOptions}
-                  error={stage1FieldErrors.accountType}
-                />
-                {accountTypesError ? (
-                  <p className="mt-1 text-[10px] text-[#E53935]">
-                    {accountTypesError}
-                  </p>
-                ) : null}
-              </div>
-
-              <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-                <PhoneNumberField
-                  label="Phone Number"
-                  countryCode={countryCode}
-                  onCountryCodeChange={(v) => {
-                    setCountryCode(v);
-                    if (stage1FieldErrors.phoneNumber) {
-                      setStage1FieldErrors((p) => ({ ...p, phoneNumber: undefined }));
-                    }
-                  }}
-                  phoneNumber={phoneNumber}
-                  onPhoneNumberChange={(v) => {
-                    setPhoneNumber(v);
-                    if (stage1FieldErrors.phoneNumber) {
-                      setStage1FieldErrors((p) => ({ ...p, phoneNumber: undefined }));
-                    }
-                  }}
-                  error={stage1FieldErrors.phoneNumber}
-                />
-                <TextField
-                  label="Email Address"
-                  value={email}
-                  onChange={(v) => {
-                    setEmail(v);
-                    if (stage1FieldErrors.email) {
-                      setStage1FieldErrors((p) => ({ ...p, email: undefined }));
-                    }
-                  }}
-                  placeholder="Enter email address"
-                  error={stage1FieldErrors.email}
-                />
-              </div>
-
-              <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-                <PasswordField
-                  label="Create Password"
-                  value={password}
-                  onChange={(v) => {
-                    setPassword(v);
-                    if (stage1FieldErrors.password) {
-                      setStage1FieldErrors((p) => ({ ...p, password: undefined }));
-                    }
-                  }}
-                  autoComplete="new-password"
-                  error={stage1FieldErrors.password}
-                />
-                <PasswordField
-                  label="Confirm Password"
-                  value={confirmPassword}
-                  onChange={(v) => {
-                    setConfirmPassword(v);
-                    if (stage1FieldErrors.confirmPassword) {
-                      setStage1FieldErrors((p) => ({ ...p, confirmPassword: undefined }));
-                    }
-                  }}
-                  autoComplete="new-password"
-                  error={stage1FieldErrors.confirmPassword}
-                />
-              </div>
-
-              <div className="mt-4 flex items-center gap-3 rounded-[6px] border border-[#89E081] bg-[#5FCE551A] px-4 py-3 text-[12px] leading-[18px] text-[#2E2E2E]">
-                <IconCheckbox
-                  checked={acceptedTerms}
-                  onChange={(next) => {
-                    setAcceptedTerms(next);
-                    if (stage1FieldErrors.acceptedTerms) {
-                      setStage1FieldErrors((p) => ({ ...p, acceptedTerms: undefined }));
-                    }
-                  }}
-                />
-                <div>
-                  By proceeding, I agree to Moneylot&apos;s{" "}
-                  <button
-                    type="button"
-                    onClick={() => {}}
-                    className="font-bold text-[#89E081] hover:opacity-80"
-                  >
-                    Terms of Use
-                  </button>{" "}
-                  and{" "}
-                  <button
-                    type="button"
-                    onClick={() => {}}
-                    className="font-bold text-[#89E081] hover:opacity-80"
-                  >
-                    Privacy Policy
-                  </button>
-                </div>
-              </div>
-              {stage1FieldErrors.acceptedTerms ? (
-                <p className="mt-1 text-[11px] text-[#E53935]">
-                  {stage1FieldErrors.acceptedTerms}
-                </p>
-              ) : null}
-            </OnboardingCard>
-
-            <div className="mt-4 text-center text-[12px] leading-[18px] text-[#5F6368]">
-              Already have an account?{" "}
-              <button
-                type="button"
-                onClick={() => router.push("/login")}
-                className="font-semibold text-[#89E081] hover:opacity-80"
-              >
-                Sign In
-              </button>
-            </div>
-          </>
+          <Stage1AccountCreation
+            firstName={firstName}
+            lastName={lastName}
+            accountType={accountType}
+            countryCode={countryCode}
+            phoneNumber={phoneNumber}
+            email={email}
+            password={password}
+            confirmPassword={confirmPassword}
+            acceptedTerms={acceptedTerms}
+            stage1Error={stage1Error}
+            stage1Loading={stage1Loading}
+            stage1FieldErrors={stage1FieldErrors}
+            accountTypeOptions={accountTypeOptions}
+            accountTypesLoading={accountTypesLoading}
+            accountTypesError={accountTypesError}
+            sanitizeNameInput={sanitizeNameInput}
+            onFirstNameChange={onStage1FirstNameChange}
+            onLastNameChange={onStage1LastNameChange}
+            onAccountTypeChange={onStage1AccountTypeChange}
+            onCountryCodeChange={onStage1CountryCodeChange}
+            onPhoneNumberChange={onStage1PhoneNumberChange}
+            onEmailChange={onStage1EmailChange}
+            onPasswordChange={onStage1PasswordChange}
+            onConfirmPasswordChange={onStage1ConfirmPasswordChange}
+            onAcceptedTermsChange={onStage1AcceptedTermsChange}
+            onContinue={onStage1Continue}
+            onSignIn={() => router.push("/login")}
+          />
         ) : stage === 2 ? (
-          <>
-            <div className="mx-auto w-full max-w-[640px]">
-              <BackPillButton onClick={() => setStage(1)} />
-            </div>
-
-            <OnboardingCard
-              stepLine={
-                <p className="text-[18px] font-medium text-[#2E2E2E]">
-                  Step <span className="text-[#2E2E2E]">2/</span>
-                  <span className="text-[#979797]">4</span>
-                  <span className="text-[#2E2E2E]"> - Verification</span>
-                </p>
-              }
-              title="Identity & Address Verification"
-              contentClassName="flex flex-col justify-between gap-6"
-              footer={
-                <div className="flex items-center justify-between gap-4">
-                  <div className="min-h-[16px]">
-                    {stage2Error ? (
-                      <p className="text-[11px] text-[#E53935]">
-                        {stage2Error}
-                      </p>
-                    ) : null}
-                  </div>
-                  <Button.SmPrimary
-                    label="Continue"
-                    width={160}
-                    height={38}
-                    loading={stage2Loading ? "Please wait" : undefined}
-                    disabled={stage2Loading}
-                    onClick={async () => {
-                      setStage2Error(null);
-                      setStage2FieldErrors({});
-
-                      const dobValue = dob.trim();
-                      const errs: typeof stage2FieldErrors = {};
-                      if (!bvn.trim()) errs.bvn = "BVN is required";
-                      if (!/^\d{4}-\d{2}-\d{2}$/.test(dobValue)) {
-                        errs.dob = "Date of birth must be in YYYY-MM-DD format";
-                      }
-                      if (!country.trim()) errs.country = "Country of residence is required";
-                      if (!address.trim()) errs.address = "Residential address is required";
-                      if (!state.trim()) errs.state = "State is required";
-                      if (!city.trim()) errs.city = "City is required";
-                      if (Object.keys(errs).length > 0) {
-                        setStage2FieldErrors(errs);
-                        return;
-                      }
-
-                      try {
-                        setStage2Loading(true);
-                        const res = await validateIdentityAddress({
-                          bvn: bvn.trim(),
-                          dateOfBirth: dobValue,
-                          countryOfResidency: country.trim(),
-                          residentialAddress: address.trim(),
-                          city: city.trim(),
-                          state: state.trim(),
-                        });
-                        console.log(
-                          "[Stage 2] validate-identity-address response:",
-                          res,
-                        );
-
-                        showSuccessToast(
-                          "Success",
-                          res?.message || "Identity verified successfully",
-                        );
-                        setStage(3);
-                        // Clear Stage 2 inputs after successful submission.
-                        clearStage2Form();
-                      } catch (e) {
-                        if (e instanceof ApiError) {
-                          setStage2Error(e.message);
-                        } else if (e instanceof Error) {
-                          setStage2Error(e.message);
-                        } else {
-                          setStage2Error(
-                            "Unable to validate identity. Please try again.",
-                          );
-                        }
-                      } finally {
-                        setStage2Loading(false);
-                      }
-                    }}
-                  />
-                </div>
-              }
-            >
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <DateField
-                  label="Date of Birth"
-                  value={dob}
-                  onChange={(v) => {
-                    setDob(v);
-                    if (stage2FieldErrors.dob) {
-                      setStage2FieldErrors((p) => ({ ...p, dob: undefined }));
-                    }
-                  }}
-                  error={stage2FieldErrors.dob}
-                />
-                <TextField
-                  label="BVN (Bank Verification Number)"
-                  value={bvn}
-                  onChange={(v) => {
-                    setBvn(v);
-                    if (stage2FieldErrors.bvn) {
-                      setStage2FieldErrors((p) => ({ ...p, bvn: undefined }));
-                    }
-                  }}
-                  placeholder="Enter your BVN"
-                  error={stage2FieldErrors.bvn}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <SelectField
-                  label="Country of Residence"
-                  placeholder={
-                    countriesLoading
-                      ? "Loading countries..."
-                      : "Select country of residence"
-                  }
-                  value={country}
-                  onChange={(v) => {
-                    setCountry(v);
-                    setStateCode("");
-                    setState_("");
-                    setCity("");
-                    if (stage2FieldErrors.country) {
-                      setStage2FieldErrors((p) => ({ ...p, country: undefined }));
-                    }
-                  }}
-                  options={countryOptions}
-                  error={stage2FieldErrors.country}
-                />
-                {countriesError ? (
-                  <p className="mt-1 text-[10px] text-[#E53935]">
-                    {countriesError}
-                  </p>
-                ) : null}
-                <TextField
-                  label="Residential Address"
-                  value={address}
-                  onChange={(v) => {
-                    setAddress(v);
-                    if (stage2FieldErrors.address) {
-                      setStage2FieldErrors((p) => ({ ...p, address: undefined }));
-                    }
-                  }}
-                  placeholder="Enter residential address"
-                  error={stage2FieldErrors.address}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <SelectField
-                  label="State"
-                  placeholder={country.trim() ? "Select State" : "Select country first"}
-                  value={stateCode}
-                  onChange={(code) => {
-                    setStateCode(code);
-                    const found = stateOptions.find((s) => s.value === code);
-                    setState_(found?.label || "");
-                    setCity("");
-                    if (stage2FieldErrors.state) {
-                      setStage2FieldErrors((p) => ({ ...p, state: undefined }));
-                    }
-                  }}
-                  options={stateOptions}
-                  error={stage2FieldErrors.state}
-                />
-                <SelectField
-                  label="City"
-                  placeholder={stateCode.trim() ? "Select City" : "Select state first"}
-                  value={city}
-                  onChange={(v) => {
-                    setCity(v);
-                    if (stage2FieldErrors.city) {
-                      setStage2FieldErrors((p) => ({ ...p, city: undefined }));
-                    }
-                  }}
-                  options={cityOptions}
-                  error={stage2FieldErrors.city}
-                />
-              </div>
-            </OnboardingCard>
-          </>
+          <Stage2Verification
+            stage2Error={stage2Error}
+            stage2Loading={stage2Loading}
+            stage2FieldErrors={stage2FieldErrors}
+            dob={dob}
+            bvn={bvn}
+            country={country}
+            address={address}
+            stateCode={stateCode}
+            city={city}
+            countriesLoading={countriesLoading}
+            countriesError={countriesError}
+            countryOptions={countryOptions}
+            stateOptions={stateOptions}
+            cityOptions={cityOptions}
+            onBack={() => setStage(1)}
+            onDobChange={onStage2DobChange}
+            onBvnChange={onStage2BvnChange}
+            onCountryChange={onStage2CountryChange}
+            onAddressChange={onStage2AddressChange}
+            onStateCodeChange={onStage2StateCodeChange}
+            onCityChange={onStage2CityChange}
+            onContinue={onStage2Continue}
+          />
         ) : stage === 3 ? (
-          <>
-            <div className="mx-auto w-full max-w-[640px]">
-              <BackPillButton onClick={() => setStage(2)} />
-            </div>
-
-            <OnboardingCard
-              stepLine={
-                <p className="text-[18px] font-medium text-[#2E2E2E]">
-                  Step <span className="text-[#2E2E2E]">3/</span>
-                  <span className="text-[#979797]">4</span>
-                  <span className="text-[#2E2E2E]"> - Bank Details</span>
-                </p>
-              }
-              title="Bank Account Details"
-              footer={
-                <div className="flex items-center justify-between gap-4">
-                  <div className="min-h-[16px]">
-                    {stage3Error ? (
-                      <p className="text-[11px] text-[#E53935]">
-                        {stage3Error}
-                      </p>
-                    ) : null}
-                  </div>
-                  <Button.SmPrimary
-                    label="Continue"
-                    width={160}
-                    height={38}
-                    loading={stage3Loading ? "Please wait" : undefined}
-                    disabled={stage3Loading}
-                    onClick={async () => {
-                      setStage3Error(null);
-                      setStage3FieldErrors({});
-                      const bankCode = bankName.trim();
-                      const acctNo = accountNumber.trim();
-                      const acctName = accountName.trim();
-                      const bankLabel = selectedBank?.bankName?.trim() || "";
-
-                      const errs: typeof stage3FieldErrors = {};
-                      if (!bankCode) errs.bankName = "Select a bank";
-                      if (!acctNo) errs.accountNumber = "Account number is required";
-                      else if (acctNo.length < 10)
-                        errs.accountNumber = "Enter a valid account number";
-                      if (!acctName) errs.accountName = "Resolve account name to continue";
-                      if (Object.keys(errs).length > 0) {
-                        setStage3FieldErrors(errs);
-                        return;
-                      }
-
-                      try {
-                        setStage3Loading(true);
-                        const res = await createWithdrawalAccount({
-                          bankCode,
-                          bankName: bankLabel || bankCode,
-                          accountName: acctName,
-                          accountNumber: acctNo,
-                        });
-                        console.log(
-                          "[Stage 3] withdrawal/create response:",
-                          res,
-                        );
-                        showSuccessToast(
-                          "Success",
-                          res?.message || "Bank details saved successfully",
-                        );
-                        setPinOpen(true);
-                        // Clear Stage 3 inputs after successful submission.
-                        clearStage3Form();
-                      } catch (e) {
-                        if (e instanceof ApiError) setStage3Error(e.message);
-                        else if (e instanceof Error) setStage3Error(e.message);
-                        else
-                          setStage3Error(
-                            "Unable to save bank details. Please try again.",
-                          );
-                      } finally {
-                        setStage3Loading(false);
-                      }
-                    }}
-                  />
-                </div>
-              }
-            >
-              <p className="text-[12px] text-[#5F6368] -mt-3">
-                Add your bank details for withdrawals
-              </p>
-
-              <div className="mt-4">
-                <SearchableSelectField
-                  label="Bank Name"
-                  placeholder={
-                    banksLoading ? "Loading banks..." : "Select bank name"
-                  }
-                  value={bankName}
-                  onChange={(v) => {
-                    setBankName(v);
-                    if (stage3FieldErrors.bankName) {
-                      setStage3FieldErrors((p) => ({ ...p, bankName: undefined }));
-                    }
-                  }}
-                  options={bankOptions}
-                  searchPlaceholder="Search bank"
-                  disabled={banksLoading}
-                  error={stage3FieldErrors.bankName}
-                />
-                {banksError ? (
-                  <p className="mt-1 text-[10px] text-[#E53935]">
-                    {banksError}
-                  </p>
-                ) : null}
-              </div>
-
-              <div className="mt-4">
-                <div className="w-full">
-                  <label className="block text-[11px] font-medium text-[#5F6368]">
-                    Account Number
-                  </label>
-                  <div className="relative mt-1">
-                    <input
-                      type="tel"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      maxLength={10}
-                      value={accountNumber}
-                      onChange={(e) => {
-                        const digits = (e.target.value || "").replace(/\D/g, "").slice(0, 10);
-                        setAccountNumber(digits);
-                        setAccountName("");
-                        lastResolvedKeyRef.current = "";
-                        if (stage3FieldErrors.accountNumber) {
-                          setStage3FieldErrors((p) => ({ ...p, accountNumber: undefined }));
-                        }
-                      }}
-                      placeholder="1234567890"
-                      className="h-[40px] w-full rounded-[6px] border border-black/10 bg-white px-3 pr-[150px] text-[12px] text-[#2E2E2E] outline-none focus:border-[#89E081]"
-                    />
-
-                    {accountResolveLoading ? (
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2 text-[10px] text-[#5F6368]">
-                        <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-[#5F6368]/20 border-t-[#5F6368]/60" />
-                        <span className="uppercase tracking-wide">Checking account</span>
-                      </div>
-                    ) : accountName.trim() && accountNumber.trim().length === 10 ? (
-                      <Image
-                        src={imagesAndIcons.toastSuccessIcon}
-                        alt="Resolved"
-                        width={14}
-                        height={14}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 h-[14px] w-[14px]"
-                      />
-                    ) : null}
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-4">
-                <TextField
-                  label="Account Name (as registered)"
-                  value={accountName}
-                  onChange={setAccountName}
-                  disabled
-                  error={stage3FieldErrors.accountName}
-                />
-              </div>
-            </OnboardingCard>
-          </>
+          <Stage3BankDetails
+            stage3Error={stage3Error}
+            stage3Loading={stage3Loading}
+            stage3FieldErrors={stage3FieldErrors}
+            banksLoading={banksLoading}
+            banksError={banksError}
+            bankName={bankName}
+            bankOptions={bankOptions}
+            accountNumber={accountNumber}
+            accountName={accountName}
+            accountResolveLoading={accountResolveLoading}
+            canContinue={
+              Boolean(bankName.trim()) &&
+              (accountNumber || "").replace(/\D/g, "").trim().length === 10 &&
+              Boolean(accountName.trim()) &&
+              !accountResolveLoading
+            }
+            onBack={() => setStage(2)}
+            onBankNameChange={onStage3BankNameChange}
+            onAccountNumberChange={onStage3AccountNumberChange}
+            onContinue={onStage3Continue}
+          />
         ) : stage === 4 ? (
-          <>
-            <div className="mx-auto w-full max-w-[640px]">
-              <BackPillButton
-                label="Go to Dashboard"
-                onClick={() => {
-                    void secureRemove(GET_STARTED_PERSIST_KEY);
-                  router.push("/dashboard");
-                }}
-              />
-            </div>
-
-            <OnboardingCard
-              stepLine={
-                <p className="text-[18px] font-medium text-[#2E2E2E]">
-                  Step <span className="text-[#2E2E2E]">4/</span>
-                  <span className="text-[#979797]">4</span>
-                  <span className="text-[#2E2E2E]"> - Make an Investment</span>
-                </p>
-              }
-              title="Fixed Term Deposits"
-              footer={
-                <div className="flex items-center justify-between gap-4">
-                  <div className="min-h-[16px]">
-                    {ratesError || expectedReturnError ? (
-                      <p className="text-[11px] text-[#E53935]">
-                        {expectedReturnError || ratesError}
-                      </p>
-                    ) : null}
-                  </div>
-                  {isStage4Ready ? (
-                    <Button.SmPrimary
-                      label="Review & Confirm"
-                      width={170}
-                      height={38}
-                      fontSize="text-[12px]"
-                      loading={
-                        expectedReturnLoading ? "Please wait" : undefined
-                      }
-                      disabled={expectedReturnLoading}
-                      onClick={async () => {
-                        setExpectedReturnError(null);
-                        setExpectedReturn(null);
-                        setTotalAtMaturity(null);
-                        setMaturityDateText(null);
-                        const amt = parseMoney(investmentAmount);
-                        if (!selectedTenorId) return;
-                        if (amt < MIN_INVESTMENT_NGN) {
-                          setExpectedReturnError("Minimum investment is ₦50");
-                          return;
-                        }
-                        try {
-                          setExpectedReturnLoading(true);
-                          const res = await getExpectedReturn({
-                            tenorId: selectedTenorId,
-                            amount: amt,
-                          });
-                          console.log(
-                            "[Stage 4] get-expected-return response:",
-                            res,
-                          );
-                          setExpectedReturn(res.expectedReturn);
-                          setTotalAtMaturity(
-                            typeof res.totalAtMaturity === "number"
-                              ? res.totalAtMaturity
-                              : null,
-                          );
-                          setMaturityDateText(
-                            typeof res.maturityDate === "string"
-                              ? res.maturityDate
-                              : null,
-                          );
-                          setAcknowledgeInvestment(false);
-                          setCreateInvestmentError(null);
-                          setStage(5);
-                        } catch (e) {
-                          if (e instanceof ApiError)
-                            setExpectedReturnError(e.message);
-                          else if (e instanceof Error)
-                            setExpectedReturnError(e.message);
-                          else
-                            setExpectedReturnError(
-                              "Unable to compute expected return.",
-                            );
-                        } finally {
-                          setExpectedReturnLoading(false);
-                        }
-                      }}
-                    />
-                  ) : (
-                    <Button.SmSecondary
-                      label="Review & Confirm"
-                      width={170}
-                      height={38}
-                      fontSize="text-[12px]"
-                      backgroundColor="bg-[#F2F2F2]"
-                      textColor="text-[#5F6368]"
-                      disabled
-                      onClick={() => {}}
-                    />
-                  )}
-                </div>
-              }
-            >
-              <p className="text-[12px] text-[#5F6368] -mt-2 mb-2 max-w-[520px]">
-                Guaranteed returns with defined interest rates
-              </p>
-
-              <div className="mt-4">
-                <p className="text-[14px] font-medium text-[#5F6368]">
-                  How much do you want to invest? (₦)
-                </p>
-                <input
-                  type="text"
-                  value={investmentAmount}
-                  onChange={(e) => setInvestmentAmount(e.target.value)}
-                  placeholder="Enter investment amount"
-                  className="mt-1 h-[40px] w-full rounded-[6px] border border-black/10 bg-white px-3 text-[12px] text-[#2E2E2E] outline-none focus:border-[#89E081]"
-                />
-                <p className="mt-1 text-[12px] text-[#E53935]">
-                  Minimum investment is ₦50
-                </p>
-              </div>
-
-              <div className="mt-4">
-                <p className="text-[14px] font-medium text-[#5F6368]">
-                  Select Tenor
-                </p>
-                <div className="mt-2 grid grid-cols-2 gap-3 md:grid-cols-4">
-                  {tenorOptions.map((opt) => (
-                    <TenorCard
-                      key={opt.id}
-                      option={{ days: opt.days, rateLabel: opt.rateLabel }}
-                      selected={selectedRateId === opt.id}
-                      onSelect={() => {
-                        setSelectedRateId(opt.id);
-                        setExpectedReturnError(null);
-                        setExpectedReturn(null);
-                        setTotalAtMaturity(null);
-                        setMaturityDateText(null);
-                      }}
-                    />
-                  ))}
-                </div>
-                {ratesLoading ? (
-                  <p className="mt-2 text-[10px] text-[#5F6368]">
-                    Loading rates...
-                  </p>
-                ) : null}
-              </div>
-
-              {isStage4Ready && selectedRatePa && selectedTenorDays ? (
-                <InvestmentSummary
-                  amountInput={investmentAmount}
-                  tenorDays={selectedTenorDays}
-                  ratePa={selectedRatePa}
-                />
-              ) : null}
-            </OnboardingCard>
-          </>
+          <Stage4Investment
+            ratesError={ratesError}
+            expectedReturnError={expectedReturnError}
+            isStage4Ready={isStage4Ready}
+            expectedReturnLoading={expectedReturnLoading}
+            ratesLoading={ratesLoading}
+            tenorOptions={tenorOptions}
+            selectedRateId={selectedRateId}
+            investmentAmount={investmentAmount}
+            minInvestmentText="Minimum investment is ₦50"
+            selectedRatePa={selectedRatePa}
+            selectedTenorDays={selectedTenorDays}
+            onGoDashboard={onStage4GoDashboard}
+            onReviewConfirm={onStage4ReviewConfirm}
+            onAmountChange={onStage4AmountChange}
+            onSelectRate={onStage4SelectRate}
+          />
         ) : stage === 5 ? (
-          <>
-            <div className="mx-auto w-full max-w-[640px]">
-              <BackPillButton onClick={() => setStage(4)} />
-            </div>
-
-            <OnboardingCard
-              stepLine={
-                <p className="text-[12px] font-medium text-[#5F6368]">
-                  Almost There!
-                </p>
-              }
-              title="Confirm Your Investment"
-              footer={
-                <div className="flex items-center justify-between gap-4">
-                  <div className="min-h-[16px]">
-                    {createInvestmentError ? (
-                      <p className="text-[11px] text-[#E53935]">
-                        {createInvestmentError}
-                      </p>
-                    ) : null}
-                  </div>
-                  <Button.SmPrimary
-                    label="Proceed to Payment"
-                    width={180}
-                    height={38}
-                    fontSize="text-[12px]"
-                    loading={
-                      createInvestmentLoading ? "Please wait" : undefined
-                    }
-                    disabled={createInvestmentLoading}
-                    onClick={async () => {
-                      setCreateInvestmentError(null);
-                      if (!acknowledgeInvestment) {
-                        setCreateInvestmentError("Please confirm to continue");
-                        return;
-                      }
-                      if (!selectedTenorId || !selectedTypeId) {
-                        setCreateInvestmentError(
-                          "Missing tenor selection. Please go back.",
-                        );
-                        return;
-                      }
-                      if (
-                        expectedReturn == null ||
-                        !Number.isFinite(expectedReturn)
-                      ) {
-                        setCreateInvestmentError(
-                          "Missing expected return. Please go back.",
-                        );
-                        return;
-                      }
-                      setInvestmentPinOpen(true);
-                    }}
-                  />
-                </div>
-              }
-            >
-              <p className="text-[12px] text-[#5F6368] -mt-1">
-                Please review all details carefully before proceeding to payment
-              </p>
-
-              {isStage4Ready && selectedRatePa && selectedTenorDays ? (
-                <InvestmentConfirmationTable
-                  investmentType="Fixed Deposit"
-                  amountInput={investmentAmount}
-                  tenorDays={selectedTenorDays}
-                  ratePa={selectedRatePa}
-                  expectedReturnOverride={expectedReturn}
-                  totalAtMaturityOverride={totalAtMaturity}
-                  maturityDateOverride={maturityDateText}
-                />
-              ) : (
-                <div className="mt-4 rounded-[10px] border border-black/10 px-5 py-8 text-[12px] text-[#5F6368]">
-                  Select a tenor and enter an amount to review your investment.
-                </div>
-              )}
-
-              <div className="mt-4 flex items-center gap-3 rounded-[6px] border border-[#89E081] bg-[#5FCE551A] px-4 py-3 text-[12px] leading-[18px] text-[#2E2E2E]">
-                <IconCheckbox
-                  checked={acknowledgeInvestment}
-                  onChange={(next) => setAcknowledgeInvestment(next)}
-                />
-                <div className="text-[#5F6368]">
-                  By proceeding, I agree that all returns accrued will be forfeited and a penalty fee incurred if funds are withdrawn before maturity
-                </div>
-              </div>
-            </OnboardingCard>
-          </>
+          <Stage5ConfirmInvestment
+            createInvestmentError={createInvestmentError}
+            createInvestmentLoading={createInvestmentLoading}
+            isStage4Ready={isStage4Ready}
+            selectedRatePa={selectedRatePa}
+            selectedTenorDays={selectedTenorDays}
+            investmentAmount={investmentAmount}
+            expectedReturn={expectedReturn}
+            totalAtMaturity={totalAtMaturity}
+            maturityDateText={maturityDateText}
+            acknowledgeInvestment={acknowledgeInvestment}
+            onBack={() => setStage(4)}
+            onAcknowledgeChange={setAcknowledgeInvestment}
+            onProceedToPayment={onStage5ProceedToPayment}
+          />
         ) : stage === 6 ? (
-          <>
-            <div className="mx-auto w-full max-w-[640px]">
-              <BackPillButton onClick={() => setStage(5)} />
-            </div>
-
-            <OnboardingCard
-              stepLine={
-                <p className="text-[12px] font-medium text-[#5F6368]">
-                  Initiate Payment
-                </p>
-              }
-              title="Make Payment To The Account Details Below"
-              footer={
-                <div className="flex justify-center">
-                  <Button.SmPrimary
-                    label="I have made this payment"
-                    width={220}
-                    height={38}
-                    fontSize="text-[12px]"
-                    loading={fundingLoading ? "Please wait" : undefined}
-                    disabled={fundingLoading}
-                    onClick={() => setStage(7)}
-                  />
-                </div>
-              }
-            >
-              {fundingError ? (
-                <div className="mb-3 rounded-[10px] border border-[#F2C6C6] bg-[#FFF5F5] px-4 py-3 text-[11px] text-[#D32F2F]">
-                  {fundingError}
-                </div>
-              ) : null}
-
-              <PaymentDetailsTable
-                amountInput={investmentAmount}
-                bankName={checkout?.bankName || "-"}
-                accountNumber={checkout?.accountNumber || "-"}
-                accountName={checkout?.accountName || "-"}
-              />
-
-              <p className="mt-4 text-center text-[11px] text-[#5F6368]">
-                Account number provided expires after{" "}
-                <span className="font-medium text-[#2E2E2E]">
-                  {expiryCountdown.formatted} mins
-                </span>
-              </p>
-
-              <p className="mt-2 text-center text-[11px] text-[#2E2E2E]">
-                Transfer only{" "}
-                <span className="font-semibold">
-                  {formatNGN(parseMoney(investmentAmount) + 50)}
-                </span>{" "}
-                to the account number above within the validity time.
-              </p>
-            </OnboardingCard>
-          </>
+          <Stage6Payment
+            fundingError={fundingError}
+            fundingLoading={fundingLoading}
+            investmentAmount={investmentAmount}
+            bankName={checkout?.bankName || "-"}
+            accountNumber={checkout?.accountNumber || "-"}
+            accountName={checkout?.accountName || "-"}
+            expiryFormatted={expiryCountdown.formatted}
+            totalToTransferFormatted={formatNGN(parseMoney(investmentAmount) + 50)}
+            onBack={() => setStage(5)}
+            onMadePayment={onStage6MadePayment}
+          />
         ) : stage === 7 ? (
-          <>
-            <div className="mx-auto w-full max-w-[640px]">
-              <div className="rounded-[10px] border border-black/10 bg-white px-6 py-10 text-center">
-                <div className="mx-auto flex justify-center">
-                  <Image
-                    src={imagesAndIcons.successfulIcon}
-                    alt="Success"
-                    width={64}
-                    height={64}
-                  />
-                </div>
-
-                <h2 className="mt-6 text-[18px] font-semibold text-[#2E2E2E]">
-                  Your Investment Is Being Processed
-                </h2>
-                <p className="mt-2 text-[12px] text-[#5F6368]">
-                  Our team is reviewing your investment. An email confirmation
-                  will be sent to you shortly.
-                </p>
-
-                <div className="mt-6 flex justify-center">
-                  <Button.MdPrimary
-                    label="Go to Dashboard"
-                    fullWidth={false}
-                    onClick={() => {
-                      void secureRemove(GET_STARTED_PERSIST_KEY);
-                      router.push("/dashboard");
-                    }}
-                    className="flex h-[46px] w-[320px] items-center justify-center rounded-[10px] py-0 text-[14px] leading-none"
-                  />
-                </div>
-
-                <p className="mt-4 text-[11px] text-[#5F6368]">
-                  Need help? Contact support{" "}
-                  <button
-                    type="button"
-                    onClick={() => {}}
-                    className="font-medium text-[#89E081] hover:opacity-80"
-                  >
-                    hello@moneylot.com
-                  </button>
-                </p>
-              </div>
-            </div>
-          </>
+          <Stage7Processing onGoDashboard={onStage7GoDashboard} />
         ) : null}
 
         <OtpModal

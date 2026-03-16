@@ -84,7 +84,6 @@ export async function getIdentityTypes(signal?: AbortSignal) {
 }
 
 export type VerifyNinRequest = {
-  typeId: number;
   nin: string;
   ninUrl: string;
 };
@@ -98,7 +97,10 @@ export type VerifyNinResponse = {
 export async function verifyNin(payload: VerifyNinRequest) {
   const res = await apiPostJson<VerifyNinResponse>(
     "/api/v1/verification/verify-nin",
-    payload
+    {
+      nin: (payload.nin || "").trim(),
+      ninUrl: payload.ninUrl,
+    }
   );
   if (!res?.status) {
     throw new Error(res?.message || "Unable to verify NIN. Please try again.");
