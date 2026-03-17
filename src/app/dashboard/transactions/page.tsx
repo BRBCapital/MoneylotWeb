@@ -188,12 +188,14 @@ export default function TransactionsPage() {
   return (
     <DashboardShell>
       <div className="w-full">
-        <h1 className="text-[18px] font-semibold text-[#2E2E2E]">
-          Transaction History
-        </h1>
-        <p className="mt-1 text-[14px] text-[#5F6368]">
-          All investment placements and maturity payouts.
-        </p>
+        <div className="px-6">
+          <h1 className="text-[18px] font-semibold text-[#2E2E2E]">
+            Transaction History
+          </h1>
+          <p className="mt-1 text-[14px] text-[#5F6368]">
+            All investment placements and maturity payouts.
+          </p>
+        </div>
 
         <div className="mt-5 bg-white rounded-[10px] p-6 relative">
           <LoadingOverlay show={loading} label="Loading transactions..." />

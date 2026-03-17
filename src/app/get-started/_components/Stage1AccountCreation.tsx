@@ -192,21 +192,23 @@ export default function Stage1AccountCreation({
             <IconCheckbox checked={acceptedTerms} onChange={onAcceptedTermsChange} />
             <div>
               By proceeding, I agree to Moneylot&apos;s{" "}
-              <button
-                type="button"
-                onClick={() => {}}
+              <a
+                href="https://moneylot.com/terms-of-use"
+                target="_blank"
+                rel="noreferrer"
                 className="font-bold text-[#89E081] hover:opacity-80"
               >
                 Terms of Use
-              </button>{" "}
+              </a>{" "}
               and{" "}
-              <button
-                type="button"
-                onClick={() => {}}
+              <a
+                href="https://moneylot.com/privacy-policy"
+                target="_blank"
+                rel="noreferrer"
                 className="font-bold text-[#89E081] hover:opacity-80"
               >
                 Privacy Policy
-              </button>
+              </a>
             </div>
           </div>
           {stage1FieldErrors.acceptedTerms ? (

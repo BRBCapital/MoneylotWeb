@@ -86,7 +86,7 @@ export default function OtpClient({ email, sent }: { email: string; sent?: boole
             }}
           />
 
-          <div className="mt-4 min-h-[16px]">
+          <div className="mt-3 min-h-[16px]">
             {error ? <p className="text-[11px] text-[#E53935]">{error}</p> : null}
           </div>
 
@@ -113,7 +113,7 @@ export default function OtpClient({ email, sent }: { email: string; sent?: boole
                 setLoading(false);
               }
             }}
-            className={`mt-5 cursor-pointer text-[12px] text-center text-[#2E2E2E] ${
+            className={`mt-3 cursor-pointer text-[12px] text-center text-[#2E2E2E] ${
               isActive ? "opacity-70" : "hover:opacity-80"
             }`}
           >

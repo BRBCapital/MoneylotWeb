@@ -302,7 +302,7 @@ export default function DashboardPage() {
   const investments: Table3Row[] = useMemo(() => investmentRows, [investmentRows]);
 
   const tableHeaders = [
-    { text: "Instruments", type: "text" as const },
+    { text: "Transaction Type", type: "text" as const },
     { text: "Current Balance", type: "text" as const },
     { text: "Expected Yield", type: "text" as const },
     { text: "Status", type: "component" as const },
@@ -322,8 +322,10 @@ export default function DashboardPage() {
       {/* Profile Setup Alert */}
       {kycVariant !== "none" ? (
         <div
-          className={`mt-6 mb-6 flex items-center justify-between gap-4 rounded-[8px] px-4 py-3 ${
-            kycVariant === "failed" ? "bg-[#FFE8E8]" : "bg-[#FFF6DE]"
+          className={`mt-6 mb-6 flex items-center justify-between gap-4 px-4 py-3 border-l-[6px] ${
+            kycVariant === "failed"
+              ? "bg-[#FFE8E8] border-l-[#FD0303]"
+              : "bg-[#FFF6DE] border-l-[#FDA803]"
           }`}
         >
           <div className="flex items-center gap-3">
@@ -352,10 +354,10 @@ export default function DashboardPage() {
                 </>
               ) : kycVariant === "failed" ? (
                 <>
-                  <p className="text-[14px] font-bold text-[#EB001B] leading-5">
+                  <p className="text-[14px] font-bold text-[#FD0303] leading-5">
                     KYC Verification Failed
                   </p>
-                  <p className="mt-0.5 text-[13px] font-normal text-[#EB001B] leading-5">
+                  <p className="mt-0.5 text-[13px] font-normal text-[#FD0303] leading-5">
                     We couldn&apos;t verify your documents. Please try again
                   </p>
                 </>
@@ -376,7 +378,7 @@ export default function DashboardPage() {
             type="button"
             onClick={() => setIdentityModalOpen(true)}
             className={`text-[13px] font-medium hover:opacity-80 ${
-              kycVariant === "failed" ? "text-[#EB001B]" : "text-[#684502]"
+              kycVariant === "failed" ? "text-[#FD0303]" : "text-[#684502]"
             }`}
           >
             Review

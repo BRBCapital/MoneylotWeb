@@ -126,6 +126,11 @@ export function SmSecondary({
   `;
 
   const isDisabled = disabled || !!loading;
+  const stateClass = disabled
+    ? `${backgroundColor} opacity-60 cursor-not-allowed`
+    : loading
+      ? `${backgroundColor} opacity-80 pointer-events-none cursor-default`
+      : `${backgroundColor} hover:opacity-80 cursor-pointer`;
 
   return (
     <button
@@ -134,13 +139,7 @@ export function SmSecondary({
         if (isDisabled) return;
         onClick();
       }}
-      className={`${cls} ${textColor} ${className || ""} ${
-        disabled
-          ? "bg-[#e2f2ef] cursor-not-allowed"
-          : loading
-            ? `${backgroundColor} opacity-80 pointer-events-none`
-            : `${backgroundColor} hover:opacity-80`
-      } duration-300 cursor-pointer whitespace-nowrap`}
+      className={`${cls} ${textColor} ${className || ""} ${stateClass} duration-300 whitespace-nowrap`}
       style={{
         height: height || "35px",
         width: width || (fullWidth ? "100%" : "auto"),

@@ -413,7 +413,7 @@ export default function SettingsPage() {
             <div className="divide-y divide-[#EEEEEE]">
               <SupportRow
                 title="Visit Us"
-                subtitle="Plot 20 Adeyinka Akinjide Street, Lekki Phase 1, Lagos"
+                subtitle="Plot 3A Shakiru Anjorin Street, Lekki Phase 1, Lagos."
                 iconSrc={imagesAndIcons.visitUs}
                 onClick={() => console.log("Visit Us clicked")}
               />

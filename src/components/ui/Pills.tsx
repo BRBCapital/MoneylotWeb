@@ -66,6 +66,13 @@ export default function Pills({ type, text, icon }: PillsProps) {
           <span className="w-2 h-2 bg-[#FDA803] rounded-full" />
           {text}
         </span>
+      ) : ["failed"].includes(t) ? (
+        <span
+          className={`${pillsClassName} text-[#FD0303] bg-[#FD03031A] px-2.5 py-1.5`}
+        >
+          <span className="w-2 h-2 bg-[#FD0303] rounded-full" />
+          {text}
+        </span>
       ) : ["error", "failed", "cancelled", "inactive", "rejected"].includes(t) ? (
         <span
           className={`${pillsClassName} text-[#EB001B] bg-[#EB001B1A] px-2.5 py-1.5`}

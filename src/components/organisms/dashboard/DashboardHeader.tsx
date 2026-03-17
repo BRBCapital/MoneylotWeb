@@ -20,6 +20,18 @@ export default function DashboardHeader() {
     return fn;
   }, [session?.firstName]);
 
+  const kycStatus = useMemo(() => {
+    const raw = (session as any)?.kycStatus;
+    if (typeof raw === "number" && Number.isFinite(raw)) return raw;
+    const n = Number(raw);
+    if (Number.isFinite(n)) return n;
+    // Backward compat: treat NIN verified as KYC approved.
+    const ninOk = Boolean(session?.ninVerified ?? (session as any)?.isNINVerified);
+    return ninOk ? 3 : 1;
+  }, [session]);
+
+  const isKycVerified = kycStatus === 3;
+
   const today = new Date();
   const dayName = today.toLocaleDateString("en-US", { weekday: "long" });
   const dayNum = today.getDate();
@@ -60,9 +72,12 @@ export default function DashboardHeader() {
           height={40}
           width={155}
           fontSize="text-[13px]"
-          backgroundColor="bg-white"
-          textColor="text-[#2E2E2E]"
-          className="border border-[#EEEEEE] rounded-[8px] font-medium"
+          disabled={!isKycVerified}
+          backgroundColor={!isKycVerified ? "bg-[#E5E7EB]" : "bg-white"}
+          textColor={!isKycVerified ? "text-[#9CA3AF]" : "text-[#2E2E2E]"}
+          className={`border rounded-[8px] font-medium ${
+            !isKycVerified ? "border-[#D1D5DB]" : "border-[#EEEEEE]"
+          }`}
           onClick={() => router.push("/dashboard/withdrawals")}
         />
         <Button.SmPrimary

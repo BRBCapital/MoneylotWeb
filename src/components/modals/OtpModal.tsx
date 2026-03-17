@@ -96,7 +96,7 @@ export default function OtpModal({
             }}
           />
 
-          <div className="mx-auto mt-4 min-h-[16px] max-w-[440px]">
+          <div className="mx-auto mt-3 min-h-[16px] max-w-[440px]">
             {error ? (
               <p className="text-[12px] text-[#E53935] text-center">{error}</p>
             ) : null}
@@ -108,7 +108,7 @@ export default function OtpModal({
               await onResend?.();
               restart(resendSeconds);
             }}
-            className={`mt-5 cursor-pointer text-[14px] text-center text-[#2E2E2E] ${
+            className={`mt-3 cursor-pointer text-[14px] text-center text-[#2E2E2E] ${
               isActive ? "opacity-70" : "hover:opacity-80"
             }`}
           >

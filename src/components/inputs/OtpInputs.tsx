@@ -112,7 +112,7 @@ export default function OtpInputs({
   };
 
   const multipleInputStyle =
-    "inline-block w-[52px] h-[52px] md:w-[56px] md:h-[56px] text-center text-[18px] font-semibold outline-0 duration-200 bg-white border border-[#E6E6E6] focus:border-[#89E081] rounded-[10px]";
+    "inline-block w-[52px] h-[52px] md:w-[56px] md:h-[56px] text-center text-[18px] font-semibold text-black caret-black outline-0 duration-200 bg-white border border-[#E6E6E6] focus:border-[#89E081] rounded-[10px]";
 
   return (
     <div className="flex justify-center gap-4 md:gap-5" ref={wrapRef}>

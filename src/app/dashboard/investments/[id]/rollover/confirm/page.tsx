@@ -91,19 +91,23 @@ export default function RolloverConfirmPage() {
               <div>
                 By proceeding, you confirm that all information provided is
                 accurate and that you accept our{" "}
-                <button
-                  type="button"
+                <a
+                  href="https://moneylot.com/terms-of-use"
+                  target="_blank"
+                  rel="noreferrer"
                   className="font-semibold text-[#89E081] hover:opacity-80"
                 >
                   Terms of Service
-                </button>{" "}
+                </a>{" "}
                 and{" "}
-                <button
-                  type="button"
+                <a
+                  href="https://moneylot.com/privacy-policy"
+                  target="_blank"
+                  rel="noreferrer"
                   className="font-semibold text-[#89E081] hover:opacity-80"
                 >
                   Privacy Policy
-                </button>
+                </a>
               </div>
             </div>
 
