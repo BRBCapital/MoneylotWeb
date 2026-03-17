@@ -11,7 +11,10 @@ import Image from "next/image";
 import { imagesAndIcons } from "@/constants/imagesAndIcons";
 import Pills from "@/components/ui/Pills";
 import Button from "@/components/ui/Button";
-import { getInvestmentList, getPortfolioSummary } from "@/services/webinvestment";
+import {
+  getInvestmentList,
+  getPortfolioSummary,
+} from "@/services/webinvestment";
 import { formatNGN } from "@/lib/investment";
 import LoadingOverlay from "@/components/ui/LoadingOverlay";
 import { isAbortError } from "@/lib/isAbortError";
@@ -32,7 +35,9 @@ export default function DashboardPage() {
     const n = Number(raw);
     if (Number.isFinite(n)) return n;
     // Backward compat: treat NIN verified as KYC approved.
-    const ninOk = Boolean(session?.ninVerified ?? (session as any)?.isNINVerified);
+    const ninOk = Boolean(
+      session?.ninVerified ?? (session as any)?.isNINVerified,
+    );
     return ninOk ? 3 : 1;
   }, [session]);
 
@@ -126,7 +131,9 @@ export default function DashboardPage() {
 
     return {
       // API expects enum id (number) or null, not a string
-      ...(typeof f.investmentType === "number" && Number.isFinite(f.investmentType) && f.investmentType > 0
+      ...(typeof f.investmentType === "number" &&
+      Number.isFinite(f.investmentType) &&
+      f.investmentType > 0
         ? { investmentType: f.investmentType }
         : { investmentType: null }),
       ...(typeof minAmount === "number" ? { minAmount } : {}),
@@ -169,7 +176,9 @@ export default function DashboardPage() {
         const invType =
           typeof x.investmentType === "string" ? x.investmentType.trim() : "-";
         const period =
-          typeof x.investmentPeriod === "string" ? x.investmentPeriod.trim() : "";
+          typeof x.investmentPeriod === "string"
+            ? x.investmentPeriod.trim()
+            : "";
         const invLabel = period ? `${invType} (${period})` : invType;
 
         const currentBalance = normalizeNumber(
@@ -178,7 +187,7 @@ export default function DashboardPage() {
             (x as any).investmentBalance ??
             (x as any).balance ??
             (x as any).investment_balance ??
-            x.amount
+            x.amount,
         );
 
         const yieldLabel =
@@ -186,10 +195,12 @@ export default function DashboardPage() {
             ? x.expectedYield.trim()
             : `${normalizeNumber(x.expectedYield)}%`;
         const createdAt =
-          (typeof (x as any).createdAt === "string" && (x as any).createdAt.trim()
+          (typeof (x as any).createdAt === "string" &&
+          (x as any).createdAt.trim()
             ? (x as any).createdAt.trim()
             : null) ||
-          (typeof (x as any).dateCreated === "string" && (x as any).dateCreated.trim()
+          (typeof (x as any).dateCreated === "string" &&
+          (x as any).dateCreated.trim()
             ? (x as any).dateCreated.trim()
             : null) ||
           (typeof (x as any).dateCreatedFormatted === "string" &&
@@ -202,7 +213,7 @@ export default function DashboardPage() {
           link:
             Number.isFinite(id) && id > 0
               ? `/dashboard/investments/${id}?status=${encodeURIComponent(
-                  statusRaw || "inactive"
+                  statusRaw || "inactive",
                 )}`
               : undefined,
           data: [
@@ -299,7 +310,10 @@ export default function DashboardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeFilter]);
 
-  const investments: Table3Row[] = useMemo(() => investmentRows, [investmentRows]);
+  const investments: Table3Row[] = useMemo(
+    () => investmentRows,
+    [investmentRows],
+  );
 
   const tableHeaders = [
     { text: "Transaction Type", type: "text" as const },
@@ -313,7 +327,10 @@ export default function DashboardPage() {
     <DashboardShell>
       <div className="relative">
         <LoadingOverlay
-          show={(!summaryLoadedRef.current || !listLoadedRef.current) && (loading || listLoading)}
+          show={
+            (!summaryLoadedRef.current || !listLoadedRef.current) &&
+            (loading || listLoading)
+          }
           label="Loading..."
         />
       </div>
@@ -322,7 +339,7 @@ export default function DashboardPage() {
       {/* Profile Setup Alert */}
       {kycVariant !== "none" ? (
         <div
-          className={`mt-6 mb-6 flex items-center justify-between gap-4 px-4 py-3 border-l-[6px] ${
+          className={`mt-6 mb-6 flex items-center justify-between gap-4 px-4 py-3 border-l-[3px] ${
             kycVariant === "failed"
               ? "bg-[#FFE8E8] border-l-[#FD0303]"
               : "bg-[#FFF6DE] border-l-[#FDA803]"
@@ -349,7 +366,8 @@ export default function DashboardPage() {
                     KYC Verification Pending
                   </p>
                   <p className="mt-0.5 text-[13px] font-normal text-[#684502] leading-5">
-                    Your documents will be reviewed within 24 hours. You can start building your portfolio now.
+                    Your documents will be reviewed within 24 hours. You can
+                    start building your portfolio now.
                   </p>
                 </>
               ) : kycVariant === "failed" ? (
@@ -439,7 +457,9 @@ export default function DashboardPage() {
                     variant="popover"
                     initial={activeFilter}
                     onReset={() => setActiveFilter({})}
-                    onApply={(payload) => setActiveFilter({ ...(payload || {}) })}
+                    onApply={(payload) =>
+                      setActiveFilter({ ...(payload || {}) })
+                    }
                   />
                 </div>
               ) : null}
@@ -451,7 +471,11 @@ export default function DashboardPage() {
           headers={tableHeaders}
           data={investments}
           emptyText="No active investments yet"
-          pagination={investments.length > 0 ? { type: "sychronous", limit: 8 } : undefined}
+          pagination={
+            investments.length > 0
+              ? { type: "sychronous", limit: 8 }
+              : undefined
+          }
         />
       </div>
 

@@ -26,7 +26,9 @@ export default function DashboardHeader() {
     const n = Number(raw);
     if (Number.isFinite(n)) return n;
     // Backward compat: treat NIN verified as KYC approved.
-    const ninOk = Boolean(session?.ninVerified ?? (session as any)?.isNINVerified);
+    const ninOk = Boolean(
+      session?.ninVerified ?? (session as any)?.isNINVerified,
+    );
     return ninOk ? 3 : 1;
   }, [session]);
 

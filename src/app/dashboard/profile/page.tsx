@@ -349,17 +349,21 @@ export default function ProfilePage() {
 
   return (
     <DashboardShell>
-      <div className="mx-auto w-full max-w-[980px]">
+      <div className="w-full max-w-[884px]">
         <div className="relative">
           <LoadingOverlay
             show={loading || bankLoading || bankActionLoading || ninSaving}
             label={ninSaving ? "Verifying NIN..." : "Loading details..."}
           />
         </div>
-        <h1 className="text-[18px] font-semibold text-[#2E2E2E]">My Account</h1>
-        <p className="mt-1 text-[14px] text-[#5F6368]">
-          Your registered account information
-        </p>
+        <div className="px-6">
+          <h1 className="text-[18px] font-semibold text-[#2E2E2E]">
+            My Account
+          </h1>
+          <p className="mt-1 text-[14px] text-[#5F6368]">
+            Your registered account information
+          </p>
+        </div>
 
         {/* Personal Details */}
         <div className="mt-5 rounded-[10px] border border-black/10 bg-white shadow-sm overflow-hidden">
