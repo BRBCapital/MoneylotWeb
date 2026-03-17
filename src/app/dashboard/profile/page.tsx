@@ -356,14 +356,10 @@ export default function ProfilePage() {
             label={ninSaving ? "Verifying NIN..." : "Loading details..."}
           />
         </div>
-        <div className="px-6">
-          <h1 className="text-[18px] font-semibold text-[#2E2E2E]">
-            My Account
-          </h1>
-          <p className="mt-1 text-[14px] text-[#5F6368]">
-            Your registered account information
-          </p>
-        </div>
+        <h1 className="text-[18px] font-semibold text-[#2E2E2E]">My Account</h1>
+        <p className="mt-1 text-[14px] text-[#5F6368]">
+          Your registered account information
+        </p>
 
         {/* Personal Details */}
         <div className="mt-5 rounded-[10px] border border-black/10 bg-white shadow-sm overflow-hidden">
