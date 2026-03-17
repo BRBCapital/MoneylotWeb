@@ -197,6 +197,13 @@ export default function TransactionsPage() {
 
         <div className="mt-5 bg-white rounded-[10px] p-6 relative">
           <LoadingOverlay show={loading} label="Loading transactions..." />
+          {(!loading && !error && rows.length === 0) ? (
+            <div className="flex items-center justify-between">
+              <p className="text-[17px] font-semibold text-[#2E2E2E]">
+                All Transactions
+              </p>
+            </div>
+          ) : (
           <div className="flex items-center justify-between">
             <p className="text-[17px] font-semibold text-[#2E2E2E]">
               All Transactions
@@ -239,6 +246,7 @@ export default function TransactionsPage() {
               ) : null}
             </div>
           </div>
+          )}
 
           <div className="mt-4">
             {error ? (
@@ -250,15 +258,20 @@ export default function TransactionsPage() {
               headers={headers}
               data={rows}
               loading={loading}
-              pagination={{
-                type: "asynchronous",
-                total: totalRecords,
-                current: pageNumber,
-                limit: pageSize,
-                onChange: async (p) => {
-                  await fetchPage(p, filter);
-                },
-              }}
+              emptyText="No transactions yet"
+              pagination={
+                (!loading && !error && rows.length === 0)
+                  ? undefined
+                  : {
+                      type: "asynchronous",
+                      total: totalRecords,
+                      current: pageNumber,
+                      limit: pageSize,
+                      onChange: async (p) => {
+                        await fetchPage(p, filter);
+                      },
+                    }
+              }
             />
           </div>
         </div>

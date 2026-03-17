@@ -27,7 +27,7 @@ export type Table3Props = {
   highlightCondition?: (row: Table3Row) => boolean;
   onRowClick?: (row: Table3Row) => void;
   disableHoverAndClick?: boolean;
-  pagination:
+  pagination?:
     | {
         type: "sychronous";
         limit: number;
@@ -69,6 +69,7 @@ export default function Table3({
   };
 
   const handleOnPaginationChange = async (page: number) => {
+    if (!pagination) return;
     setCurrentPage(page);
     if (pagination.type === "asynchronous" && pagination.onChange) {
       try {
@@ -85,13 +86,14 @@ export default function Table3({
   };
 
   const getCurrentPageData = () => {
-    if (pagination.type === "sychronous") {
+    if (pagination?.type === "sychronous") {
       return handlePaginationData(data, currentPage, pagination.limit);
     }
     return data; // async already filtered server-side
   };
 
   const getPaginationProps = () => {
+    if (!pagination) return null;
     if (pagination.type === "sychronous") {
       return {
         total: data.length,
@@ -108,6 +110,8 @@ export default function Table3({
     };
   };
 
+  const paginationProps = getPaginationProps();
+
   return (
     <>
       {loading || paginationLoading ? (
@@ -115,8 +119,10 @@ export default function Table3({
       ) : (
         <>
           {data.length === 0 ? (
-            <div className="flex justify-center items-center text-center h-[150px] text-gray-500 py-4 fade-in">
-              {emptyText || "No data available"}
+            <div className="flex items-center justify-center text-center min-h-[260px] w-full py-6 fade-in">
+              <p className="text-[14px] text-[#5F6368]">
+                {emptyText || "No data available"}
+              </p>
             </div>
           ) : (
             <div
@@ -235,12 +241,14 @@ export default function Table3({
         </>
       )}
 
-      <div className="flex items-center gap-4">
-        <Pagination {...getPaginationProps()} />
-        <span className="text-sm text-[#5F6368] whitespace-nowrap">
-          {pagination.limit} entries per page
-        </span>
-      </div>
+      {paginationProps && data.length > 0 ? (
+        <div className="flex items-center gap-4">
+          <Pagination {...paginationProps} />
+          <span className="text-sm text-[#5F6368] whitespace-nowrap">
+            {paginationProps.limit} entries per page
+          </span>
+        </div>
+      ) : null}
     </>
   );
 }

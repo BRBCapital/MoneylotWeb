@@ -347,7 +347,7 @@ export default function DashboardPage() {
                     KYC Verification Pending
                   </p>
                   <p className="mt-0.5 text-[13px] font-normal text-[#684502] leading-5">
-                    Your documents have been submitted successfully. Verification will be completed within 24 hours.
+                    Your documents will be reviewed within 24 hours. You can start building your portfolio now.
                   </p>
                 </>
               ) : kycVariant === "failed" ? (
@@ -409,44 +409,47 @@ export default function DashboardPage() {
           <h2 className="text-[17px] font-semibold text-[#2E2E2E]">
             My Investments
           </h2>
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setFilterOpen((v) => !v)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-[6px] border border-[#EEEEEE] bg-white hover:bg-[#FAFAFA] transition-colors"
-            >
-              <Image
-                src={imagesAndIcons.filters}
-                alt="Filter"
-                width={18}
-                height={18}
-                className="w-[18px] h-[18px]"
-              />
-              <span className="text-[11px] font-medium text-[#2E2E2E]">
-                Filter
-              </span>
-            </button>
-
-            {/* Popover filter (anchored under button) */}
-            {filterOpen ? (
-              <div className="absolute right-0 top-[calc(100%+10px)] z-20">
-                <FilterModal
-                  open={filterOpen}
-                  setOpen={setFilterOpen}
-                  variant="popover"
-                  initial={activeFilter}
-                  onReset={() => setActiveFilter({})}
-                  onApply={(payload) => setActiveFilter({ ...(payload || {}) })}
+          {investments.length > 0 ? (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setFilterOpen((v) => !v)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-[6px] border border-[#EEEEEE] bg-white hover:bg-[#FAFAFA] transition-colors"
+              >
+                <Image
+                  src={imagesAndIcons.filters}
+                  alt="Filter"
+                  width={18}
+                  height={18}
+                  className="w-[18px] h-[18px]"
                 />
-              </div>
-            ) : null}
-          </div>
+                <span className="text-[11px] font-medium text-[#2E2E2E]">
+                  Filter
+                </span>
+              </button>
+
+              {/* Popover filter (anchored under button) */}
+              {filterOpen ? (
+                <div className="absolute right-0 top-[calc(100%+10px)] z-20">
+                  <FilterModal
+                    open={filterOpen}
+                    setOpen={setFilterOpen}
+                    variant="popover"
+                    initial={activeFilter}
+                    onReset={() => setActiveFilter({})}
+                    onApply={(payload) => setActiveFilter({ ...(payload || {}) })}
+                  />
+                </div>
+              ) : null}
+            </div>
+          ) : null}
         </div>
 
         <Table3
           headers={tableHeaders}
           data={investments}
-          pagination={{ type: "sychronous", limit: 8 }}
+          emptyText="No active investments yet"
+          pagination={investments.length > 0 ? { type: "sychronous", limit: 8 } : undefined}
         />
       </div>
 

@@ -117,6 +117,10 @@ export default function Stage1AccountCreation({
           </div>
         }
       >
+        <p className="-mt-3 text-[12px] text-[#5F6368]">
+          Enter your name and details exactly as they appear on your BVN
+        </p>
+
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <TextField
             label="First Name"

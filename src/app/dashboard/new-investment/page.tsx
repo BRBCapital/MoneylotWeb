@@ -161,16 +161,28 @@ export default function NewInvestmentPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expirySeconds]);
 
+  // Step 1 inputs (cleared once user leaves step 1)
   const [investmentAmount, setInvestmentAmount] = useState("");
   const [ratesLoading, setRatesLoading] = useState(false);
   const [ratesError, setRatesError] = useState<string | null>(null);
   const [rates, setRates] = useState<InvestmentRateDto[]>([]);
   const [selectedRateId, setSelectedRateId] = useState<number | null>(null);
 
+  // Locked snapshot for steps 2+ (so step 1 can be cleared)
+  const [confirmedAmountInput, setConfirmedAmountInput] = useState<string | null>(
+    null,
+  );
+  const [confirmedRateId, setConfirmedRateId] = useState<number | null>(null);
+
+  const effectiveAmountInput =
+    step === 1 ? investmentAmount : confirmedAmountInput ?? investmentAmount;
+  const effectiveRateId =
+    step === 1 ? selectedRateId : confirmedRateId ?? selectedRateId;
+
   const selectedRate = useMemo(() => {
-    if (selectedRateId == null) return null;
-    return rates.find((r) => r.id === selectedRateId) || null;
-  }, [rates, selectedRateId]);
+    if (effectiveRateId == null) return null;
+    return rates.find((r) => r.id === effectiveRateId) || null;
+  }, [rates, effectiveRateId]);
 
   const selectedTenorDays = selectedRate ? selectedRate.investmentPeriod : null;
   const selectedTenorId = selectedRate ? selectedRate.tenorId : null;
@@ -202,13 +214,10 @@ export default function NewInvestmentPage() {
   const [tenorText, setTenorText] = useState<string | null>(null);
   const [acknowledge, setAcknowledge] = useState(false);
 
-  const amount = useMemo(
-    () => parseMoney(investmentAmount),
-    [investmentAmount],
-  );
+  const amount = useMemo(() => parseMoney(effectiveAmountInput), [effectiveAmountInput]);
 
   const isReady =
-    investmentAmount.trim() !== "" &&
+    effectiveAmountInput.trim() !== "" &&
     amount >= MIN_INVESTMENT_NGN &&
     selectedTenorDays !== null &&
     selectedTenorId !== null &&
@@ -300,16 +309,28 @@ export default function NewInvestmentPage() {
       if (saved && typeof saved === "object") {
         const s = Number(saved.step);
         if (Number.isFinite(s) && s >= 1 && s <= 4) setStep(s as Step);
-        setInvestmentAmount(
-          typeof saved.investmentAmount === "string"
-            ? saved.investmentAmount
-            : "",
+        const savedInvestmentAmount =
+          typeof saved.investmentAmount === "string" ? saved.investmentAmount : "";
+        const savedSelectedRateId =
+          typeof saved.selectedRateId === "number" ? saved.selectedRateId : null;
+        setInvestmentAmount(savedInvestmentAmount);
+        setSelectedRateId(savedSelectedRateId);
+
+        // Prefer explicit confirmed snapshot; otherwise migrate from old keys when step >= 2
+        const savedConfirmedAmount =
+          typeof saved.confirmedAmountInput === "string" ? saved.confirmedAmountInput : null;
+        const savedConfirmedRateId =
+          typeof saved.confirmedRateId === "number" ? saved.confirmedRateId : null;
+        const stepValue = Number.isFinite(s) ? (s as Step) : 1;
+        setConfirmedAmountInput(
+          savedConfirmedAmount ??
+            (stepValue >= 2 ? savedInvestmentAmount : null),
         );
-        setSelectedRateId(
-          typeof saved.selectedRateId === "number"
-            ? saved.selectedRateId
-            : null,
+        setConfirmedRateId(
+          savedConfirmedRateId ??
+            (stepValue >= 2 ? savedSelectedRateId : null),
         );
+
         setExpectedReturn(
           typeof saved.expectedReturn === "number"
             ? saved.expectedReturn
@@ -374,6 +395,8 @@ export default function NewInvestmentPage() {
       step,
       investmentAmount,
       selectedRateId,
+      confirmedAmountInput,
+      confirmedRateId,
       expectedReturn,
       totalAtMaturity,
       maturityDateText,
@@ -393,6 +416,8 @@ export default function NewInvestmentPage() {
     step,
     investmentAmount,
     selectedRateId,
+    confirmedAmountInput,
+    confirmedRateId,
     expectedReturn,
     totalAtMaturity,
     maturityDateText,
@@ -644,6 +669,13 @@ export default function NewInvestmentPage() {
                         typeof res.tenor === "string" ? res.tenor : null,
                       );
                       setAcknowledge(false);
+
+                      // Lock snapshot for steps 2+, then clear step 1 inputs so back shows empty.
+                      setConfirmedAmountInput(investmentAmount);
+                      setConfirmedRateId(selectedRateId);
+                      setInvestmentAmount("");
+                      setSelectedRateId(null);
+
                       setStep(2);
                     } catch (e) {
                       if (e instanceof ApiError) setExpectedError(e.message);
@@ -706,6 +738,10 @@ export default function NewInvestmentPage() {
                 fontSize="text-[11px]"
                 className="rounded-[8px] font-medium"
                 onClick={() => {
+                  if (!confirmedAmountInput?.trim() || confirmedRateId == null) {
+                    setExpectedError("Please restart this investment.");
+                    return;
+                  }
                   if (!acknowledge) {
                     setExpectedError("Please confirm to continue");
                     return;
@@ -727,7 +763,7 @@ export default function NewInvestmentPage() {
             ) : null}
 
             <PaymentDetailsTable
-              amountInput={investmentAmount}
+              amountInput={confirmedAmountInput ?? investmentAmount}
               bankName={checkout?.bankName || "-"}
               accountNumber={checkout?.accountNumber || "-"}
               accountName={checkout?.accountName || "-"}
@@ -742,7 +778,7 @@ export default function NewInvestmentPage() {
             <p className="mt-1 text-center text-[11px] text-[#5F6368]">
               Transfer only{" "}
               <span className="font-semibold text-[#2E2E2E]">
-                {formatNGN(parseMoney(investmentAmount) + 50)}
+                {formatNGN(parseMoney(confirmedAmountInput ?? investmentAmount) + 50)}
               </span>{" "}
               to the account number above within the validity time
             </p>
