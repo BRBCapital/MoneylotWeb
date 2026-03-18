@@ -99,6 +99,7 @@ export default function Stage1AccountCreation({
           </p>
         }
         title="Personal Information"
+        contentTopClassName="mt-0.5"
         footer={
           <div className="flex items-center justify-between gap-4">
             <div className="min-h-[16px]">
@@ -117,7 +118,7 @@ export default function Stage1AccountCreation({
           </div>
         }
       >
-        <p className="-mt-3 text-[12px] text-[#5F6368]">
+        <p className="mt-0 mb-5 text-[12px] text-[#5F6368]">
           Enter your name and details exactly as they appear on your BVN
         </p>
 

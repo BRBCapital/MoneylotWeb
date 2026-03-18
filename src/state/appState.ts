@@ -15,6 +15,13 @@ export type AuthSession = {
   ninVerified?: boolean;
   /** @deprecated v1 field name kept for backward compatibility */
   isNINVerified?: boolean;
+  // Onboarding progress flags (v2)
+  stage1?: boolean;
+  stage1_5?: boolean;
+  stage2?: boolean;
+  stage3?: boolean;
+  stage3_5?: boolean;
+  stage4?: boolean;
 };
 
 export type Stage1SignupContext = {

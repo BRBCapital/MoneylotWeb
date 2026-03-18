@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import OnboardingShell from "@/components/templates/onboarding/OnboardingShell";
 import {
   DateField,
@@ -45,6 +45,9 @@ import {
 import { getCountries } from "@/services/verification";
 import {
   setAuthSession,
+  getAuthSession,
+  getUserEmail,
+  authSessionAtom,
   stage1SignupContextAtom,
   setUserEmail,
 } from "@/state/appState";
@@ -208,6 +211,7 @@ export default function GetStartedPage() {
   const [stage1SignupContext, setStage1SignupContext] = useAtom(
     stage1SignupContextAtom,
   );
+  const session = useAtomValue(authSessionAtom);
 
   const [bvn, setBvn] = useState("");
   const [dob, setDob] = useState(""); // YYYY-MM-DD
@@ -406,6 +410,52 @@ export default function GetStartedPage() {
     }
     if (Number.isFinite(n) && n >= 1 && n <= 7) {
       setStage(n as any);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [flowHydrated, searchParams]);
+
+  // Support deep-linking to a stage from login ("Continue setup").
+  useEffect(() => {
+    if (!flowHydrated) return;
+    const rawStage = searchParams.get("stage");
+    const openOtp = searchParams.get("openOtp") === "1";
+    const openPin = searchParams.get("openPin") === "1";
+
+    const n = rawStage ? Number(rawStage) : NaN;
+    if (Number.isFinite(n) && n >= 1 && n <= 7) {
+      setStage(n as any);
+    }
+
+    if (openPin) {
+      setStage(3);
+      setPinOpen(true);
+    }
+
+    if (openOtp) {
+      // ensure stage 1 and email are available for display + resend
+      setStage(1);
+      const storedEmail = getUserEmail();
+      if (storedEmail && !email) setEmail(storedEmail);
+      setOtpOpen(true);
+
+      // proactively send OTP if we have an email
+      const e = (storedEmail || email || "").trim();
+      if (e) {
+        setStage1Error(null);
+        setOtpLoading(true);
+        webGenerateOtp(e, 1)
+          .then(() => showSuccessToast("Success", "OTP sent"))
+          .catch((err) => {
+            const msg =
+              err instanceof ApiError
+                ? err.message
+                : err instanceof Error
+                  ? err.message
+                  : "Unable to send OTP. Please try again.";
+            setStage1Error(msg);
+          })
+          .finally(() => setOtpLoading(false));
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [flowHydrated, searchParams]);
@@ -766,6 +816,8 @@ export default function GetStartedPage() {
           }
 
           // Attempt background login to continue onboarding.
+          let resumeUserId: number | null = null;
+          let resumeAccountId: number | null = null;
           try {
             const loginRes = await securityLogin({
               emailAddress: emailValue,
@@ -777,6 +829,8 @@ export default function GetStartedPage() {
             }
 
             setUserEmail(emailValue);
+            resumeUserId = loginRes.data.userId;
+            resumeAccountId = loginRes.data.accountId;
             setAuthSession({
               accountId: loginRes.data.accountId,
               userId: loginRes.data.userId,
@@ -787,6 +841,12 @@ export default function GetStartedPage() {
               expires: loginRes.data.expires,
               refreshTokenExpiryTime: loginRes.data.refreshTokenExpiryTime,
               enforcePassword: loginRes.data.enforcePassword,
+              stage1: Boolean((loginRes.data as any).stage1),
+              stage1_5: Boolean((loginRes.data as any).stage1_5),
+              stage2: Boolean((loginRes.data as any).stage2),
+              stage3: Boolean((loginRes.data as any).stage3),
+              stage3_5: Boolean((loginRes.data as any).stage3_5),
+              stage4: Boolean((loginRes.data as any).stage4),
               kycStatus:
                 typeof (loginRes.data as any).kycStatus === "number"
                   ? (loginRes.data as any).kycStatus
@@ -806,9 +866,32 @@ export default function GetStartedPage() {
           showSuccessToast("Success", "Continue your onboarding process");
 
           const stage1Done = Boolean(d?.stage1);
+          const stage1_5Done = Boolean(d?.stage1_5 ?? d?.emailVerified);
           const stage2Done = Boolean(d?.stage2);
           const stage3Done = Boolean(d?.stage3);
 
+          if (stage1Done && !stage1_5Done) {
+            setStage1SignupContext((prev) => ({
+              ...prev,
+              userId:
+                typeof d?.userId === "number"
+                  ? d.userId
+                  : resumeUserId ?? prev.userId,
+              accountId: resumeAccountId ?? prev.accountId,
+              emailAddress: emailValue,
+              password,
+            }));
+            setEmail(emailValue);
+            try {
+              setOtpLoading(true);
+              await webGenerateOtp(emailValue, 1);
+            } finally {
+              setOtpLoading(false);
+            }
+            setOtpOpen(true);
+            clearStage1Form();
+            return;
+          }
           if (stage1Done && !stage2Done) {
             setStage(2);
             clearStage1Form();
@@ -895,6 +978,8 @@ export default function GetStartedPage() {
           }
 
           // Attempt background login to continue onboarding.
+          let resumeUserId: number | null = null;
+          let resumeAccountId: number | null = null;
           try {
             const loginRes = await securityLogin({
               emailAddress: emailValue,
@@ -906,6 +991,8 @@ export default function GetStartedPage() {
             }
 
             setUserEmail(emailValue);
+            resumeUserId = loginRes.data.userId;
+            resumeAccountId = loginRes.data.accountId;
             setAuthSession({
               accountId: loginRes.data.accountId,
               userId: loginRes.data.userId,
@@ -916,6 +1003,12 @@ export default function GetStartedPage() {
               expires: loginRes.data.expires,
               refreshTokenExpiryTime: loginRes.data.refreshTokenExpiryTime,
               enforcePassword: loginRes.data.enforcePassword,
+              stage1: Boolean((loginRes.data as any).stage1),
+              stage1_5: Boolean((loginRes.data as any).stage1_5),
+              stage2: Boolean((loginRes.data as any).stage2),
+              stage3: Boolean((loginRes.data as any).stage3),
+              stage3_5: Boolean((loginRes.data as any).stage3_5),
+              stage4: Boolean((loginRes.data as any).stage4),
               kycStatus:
                 typeof (loginRes.data as any).kycStatus === "number"
                   ? (loginRes.data as any).kycStatus
@@ -935,9 +1028,32 @@ export default function GetStartedPage() {
           showSuccessToast("Success", "Continue your onboarding process");
 
           const stage1Done = Boolean(d?.stage1);
+          const stage1_5Done = Boolean(d?.stage1_5 ?? d?.emailVerified);
           const stage2Done = Boolean(d?.stage2);
           const stage3Done = Boolean(d?.stage3);
 
+          if (stage1Done && !stage1_5Done) {
+            setStage1SignupContext((prev) => ({
+              ...prev,
+              userId:
+                typeof d?.userId === "number"
+                  ? d.userId
+                  : resumeUserId ?? prev.userId,
+              accountId: resumeAccountId ?? prev.accountId,
+              emailAddress: emailValue,
+              password,
+            }));
+            setEmail(emailValue);
+            try {
+              setOtpLoading(true);
+              await webGenerateOtp(emailValue, 1);
+            } finally {
+              setOtpLoading(false);
+            }
+            setOtpOpen(true);
+            clearStage1Form();
+            return;
+          }
           if (stage1Done && !stage2Done) {
             setStage(2);
             clearStage1Form();
@@ -1589,11 +1705,11 @@ export default function GetStartedPage() {
         <OtpModal
           open={otpOpen}
           setOpen={setOtpOpen}
-          email={(stage1SignupContext.emailAddress || email || "").trim()}
+          email={(stage1SignupContext.emailAddress || getUserEmail() || email || "").trim()}
           isLoading={otpLoading}
           confirmLabel="Verify"
           onResend={async () => {
-            const e = (stage1SignupContext.emailAddress || email || "").trim();
+            const e = (stage1SignupContext.emailAddress || getUserEmail() || email || "").trim();
             if (!e) {
               setStage1Error("Missing email. Please submit Stage 1 again.");
               return;
@@ -1616,51 +1732,67 @@ export default function GetStartedPage() {
             }
           }}
           onConfirm={async (otp) => {
-            if (
-              !stage1SignupContext.emailAddress ||
-              !stage1SignupContext.password
-            ) {
-              setStage1Error(
-                "Missing login details. Please submit Stage 1 again.",
-              );
-              return;
-            }
             try {
               setOtpLoading(true);
-              const otpRes = await webValidateOtp(stage1SignupContext.userId, otp);
-              console.log("[Stage 1] otp/web-validate-otp response:", otpRes);
+              const authMode =
+                Boolean(stage1SignupContext.emailAddress) &&
+                Boolean(stage1SignupContext.password);
 
-              // Login in the background with Stage 1 credentials.
-              const loginRes = await securityLogin({
-                emailAddress: stage1SignupContext.emailAddress,
-                password: stage1SignupContext.password,
-              });
-              console.log("[Stage 1] auth/login response:", loginRes);
+              if (authMode) {
+                const otpRes = await webValidateOtp(stage1SignupContext.userId, otp);
+                console.log("[Stage 1] otp/web-validate-otp response:", otpRes);
 
-              if (!loginRes?.status || !loginRes?.data?.sessionToken) {
-                throw new Error("Unable to create login session");
+                // Login in the background with Stage 1 credentials.
+                const loginRes = await securityLogin({
+                  emailAddress: stage1SignupContext.emailAddress,
+                  password: stage1SignupContext.password,
+                });
+                console.log("[Stage 1] auth/login response:", loginRes);
+
+                if (!loginRes?.status || !loginRes?.data?.sessionToken) {
+                  throw new Error("Unable to create login session");
+                }
+
+                setAuthSession({
+                  accountId: loginRes.data.accountId,
+                  userId: loginRes.data.userId,
+                  firstName: loginRes.data.firstName,
+                  lastName: loginRes.data.lastName,
+                  refreshToken: loginRes.data.refreshToken,
+                  sessionToken: loginRes.data.sessionToken,
+                  expires: loginRes.data.expires,
+                  refreshTokenExpiryTime: loginRes.data.refreshTokenExpiryTime,
+                  enforcePassword: loginRes.data.enforcePassword,
+                  stage1: Boolean((loginRes.data as any).stage1),
+                  stage1_5: Boolean((loginRes.data as any).stage1_5),
+                  stage2: Boolean((loginRes.data as any).stage2),
+                  stage3: Boolean((loginRes.data as any).stage3),
+                  stage3_5: Boolean((loginRes.data as any).stage3_5),
+                  stage4: Boolean((loginRes.data as any).stage4),
+                  kycStatus:
+                    typeof (loginRes.data as any).kycStatus === "number"
+                      ? (loginRes.data as any).kycStatus
+                      : Number.isFinite(Number((loginRes.data as any).kycStatus))
+                        ? Number((loginRes.data as any).kycStatus)
+                        : undefined,
+                  ninVerified: Boolean(
+                    (loginRes.data as any).ninVerified ??
+                      (loginRes.data as any).isNINVerified
+                  ),
+                });
+              } else {
+                const ses = getAuthSession();
+                if (!ses?.userId) {
+                  throw new Error("Missing user session. Please login again.");
+                }
+                const otpRes = await webValidateOtp(ses.userId, otp);
+                console.log("[Stage 1] otp/web-validate-otp response:", otpRes);
+                setAuthSession({
+                  ...ses,
+                  stage1: true,
+                  stage1_5: true,
+                });
               }
-
-              setAuthSession({
-                accountId: loginRes.data.accountId,
-                userId: loginRes.data.userId,
-                firstName: loginRes.data.firstName,
-                lastName: loginRes.data.lastName,
-                refreshToken: loginRes.data.refreshToken,
-                sessionToken: loginRes.data.sessionToken,
-                expires: loginRes.data.expires,
-                refreshTokenExpiryTime: loginRes.data.refreshTokenExpiryTime,
-                enforcePassword: loginRes.data.enforcePassword,
-                kycStatus:
-                  typeof (loginRes.data as any).kycStatus === "number"
-                    ? (loginRes.data as any).kycStatus
-                    : Number.isFinite(Number((loginRes.data as any).kycStatus))
-                      ? Number((loginRes.data as any).kycStatus)
-                      : undefined,
-                ninVerified: Boolean(
-                  (loginRes.data as any).ninVerified ?? (loginRes.data as any).isNINVerified
-                ),
-              });
 
               setStage1Error(null);
               setOtpOpen(false);

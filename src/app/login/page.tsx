@@ -12,6 +12,8 @@ import { securityLogin } from "@/services/auth";
 import { ApiError } from "@/lib/apiClient";
 import { setAuthSession, setUserEmail } from "@/state/appState";
 import { showErrorToast, showSuccessToast } from "@/state/toastState";
+import { resolveSetupRoute } from "@/lib/setupProgress";
+import { setPendingSetupRoute } from "@/lib/pendingSetup";
 
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
@@ -140,6 +142,12 @@ export default function LoginPage() {
                     expires: res.data.expires,
                     refreshTokenExpiryTime: res.data.refreshTokenExpiryTime,
                     enforcePassword: res.data.enforcePassword,
+                    stage1: Boolean((res.data as any).stage1),
+                    stage1_5: Boolean((res.data as any).stage1_5),
+                    stage2: Boolean((res.data as any).stage2),
+                    stage3: Boolean((res.data as any).stage3),
+                    stage3_5: Boolean((res.data as any).stage3_5),
+                    stage4: Boolean((res.data as any).stage4),
                     kycStatus:
                       typeof (res.data as any).kycStatus === "number"
                         ? (res.data as any).kycStatus
@@ -152,6 +160,8 @@ export default function LoginPage() {
                   });
 
                   showSuccessToast("Success", res?.message || "Login successful");
+                  const next = resolveSetupRoute(res.data as any);
+                  if (!next.isComplete) setPendingSetupRoute(next);
                   router.push("/dashboard");
                 } catch (e) {
                   // Account locked flow (failed attempts)

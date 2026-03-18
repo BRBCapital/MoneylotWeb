@@ -25,6 +25,14 @@ export type AuthTokenData = {
   updatedAt: string;
   enforcePassword: boolean;
   isNINVerified?: boolean;
+  ninVerified?: boolean;
+  kycStatus?: number;
+  stage1?: boolean;
+  stage1_5?: boolean;
+  stage2?: boolean;
+  stage3?: boolean;
+  stage3_5?: boolean;
+  stage4?: boolean;
 };
 
 export type AuthTokenResponse = {

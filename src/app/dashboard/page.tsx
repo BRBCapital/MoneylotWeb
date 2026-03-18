@@ -18,35 +18,13 @@ import {
 import { formatNGN } from "@/lib/investment";
 import LoadingOverlay from "@/components/ui/LoadingOverlay";
 import { isAbortError } from "@/lib/isAbortError";
-import { useAtomValue } from "jotai";
-import { authSessionAtom } from "@/state/appState";
 import { useSearchParams } from "next/navigation";
 
 export default function DashboardPage() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [identityModalOpen, setIdentityModalOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState<FilterPayload>({});
-  const session = useAtomValue(authSessionAtom);
   const searchParams = useSearchParams();
-
-  const kycStatus = useMemo(() => {
-    const raw = (session as any)?.kycStatus;
-    if (typeof raw === "number" && Number.isFinite(raw)) return raw;
-    const n = Number(raw);
-    if (Number.isFinite(n)) return n;
-    // Backward compat: treat NIN verified as KYC approved.
-    const ninOk = Boolean(
-      session?.ninVerified ?? (session as any)?.isNINVerified,
-    );
-    return ninOk ? 3 : 1;
-  }, [session]);
-
-  const kycVariant = useMemo<"new" | "pending" | "failed" | "none">(() => {
-    if (kycStatus === 3) return "none"; // Approved
-    if (kycStatus === 2) return "pending";
-    if (kycStatus === 4) return "failed";
-    return "new"; // New / Abandoned / unknown
-  }, [kycStatus]);
 
   useEffect(() => {
     if (searchParams.get("verifyKyc") === "1") {
@@ -336,74 +314,6 @@ export default function DashboardPage() {
       </div>
       <DashboardHeader />
 
-      {/* Profile Setup Alert */}
-      {kycVariant !== "none" ? (
-        <div
-          className={`mt-6 mb-6 flex items-center justify-between gap-4 px-4 py-3 border-l-[3px] ${
-            kycVariant === "failed"
-              ? "bg-[#FFE8E8] border-l-[#FD0303]"
-              : "bg-[#FFF6DE] border-l-[#FDA803]"
-          }`}
-        >
-          <div className="flex items-center gap-3">
-            <Image
-              src={
-                kycVariant === "pending"
-                  ? imagesAndIcons.pending
-                  : kycVariant === "failed"
-                    ? imagesAndIcons.failed
-                    : imagesAndIcons.completeProfile
-              }
-              alt="Alert"
-              width={32}
-              height={32}
-              className="h-[32px] w-[32px] shrink-0"
-            />
-            <div>
-              {kycVariant === "pending" ? (
-                <>
-                  <p className="text-[14px] font-bold text-[#684502] leading-5">
-                    KYC Verification Pending
-                  </p>
-                  <p className="mt-0.5 text-[13px] font-normal text-[#684502] leading-5">
-                    Your documents will be reviewed within 24 hours. You can
-                    start building your portfolio now.
-                  </p>
-                </>
-              ) : kycVariant === "failed" ? (
-                <>
-                  <p className="text-[14px] font-bold text-[#FD0303] leading-5">
-                    KYC Verification Failed
-                  </p>
-                  <p className="mt-0.5 text-[13px] font-normal text-[#FD0303] leading-5">
-                    We couldn&apos;t verify your documents. Please try again
-                  </p>
-                </>
-              ) : (
-                <>
-                  <p className="text-[14px] font-bold text-[#684502] leading-5">
-                    Complete your KYC verification
-                  </p>
-                  <p className="mt-0.5 text-[13px] font-normal text-[#684502] leading-5">
-                    Verify Your Identity
-                  </p>
-                </>
-              )}
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setIdentityModalOpen(true)}
-            className={`text-[13px] font-medium hover:opacity-80 ${
-              kycVariant === "failed" ? "text-[#FD0303]" : "text-[#684502]"
-            }`}
-          >
-            Review
-          </button>
-        </div>
-      ) : null}
-
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <SummaryCard
@@ -480,12 +390,10 @@ export default function DashboardPage() {
       </div>
 
       {/* Modals */}
-      {kycVariant !== "none" ? (
-        <IdentityVerificationModal
-          open={identityModalOpen}
-          setOpen={setIdentityModalOpen}
-        />
-      ) : null}
+      <IdentityVerificationModal
+        open={identityModalOpen}
+        setOpen={setIdentityModalOpen}
+      />
     </DashboardShell>
   );
 }
