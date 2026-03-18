@@ -199,6 +199,7 @@ export default function TransactionsFilterPopover({
             width="80px"
             fontSize="text-[11px]"
             label="Cancel"
+            className="flex items-center justify-center py-0 leading-none"
             onClick={() => {
               setOpen(false);
             }}
@@ -208,6 +209,7 @@ export default function TransactionsFilterPopover({
             width="110px"
             fontSize="text-[11px]"
             label="Apply Filter"
+            className="flex items-center justify-center py-0 leading-none"
             onClick={() => {
               onApply(payload);
               setOpen(false);

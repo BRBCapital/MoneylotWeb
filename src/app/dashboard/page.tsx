@@ -293,6 +293,17 @@ export default function DashboardPage() {
     [investmentRows],
   );
 
+  const hasActiveFilter = useMemo(() => {
+    const f: any = activeFilter || {};
+    return Object.values(f).some((v) => {
+      if (v == null) return false;
+      if (typeof v === "string") return v.trim().length > 0;
+      if (typeof v === "number") return Number.isFinite(v);
+      if (typeof v === "boolean") return v === true;
+      return true;
+    });
+  }, [activeFilter]);
+
   const tableHeaders = [
     { text: "Investment Type", type: "text" as const },
     { text: "Current Balance", type: "text" as const },
@@ -339,7 +350,7 @@ export default function DashboardPage() {
           <h2 className="text-[17px] font-semibold text-[#2E2E2E]">
             My Investments
           </h2>
-          {investments.length > 0 ? (
+          {investments.length > 0 || hasActiveFilter ? (
             <div className="relative">
               <button
                 type="button"
@@ -380,7 +391,11 @@ export default function DashboardPage() {
         <Table3
           headers={tableHeaders}
           data={investments}
-          emptyText="No active investments yet"
+          emptyText={
+            hasActiveFilter
+              ? "No investments qualify for these options"
+              : "No active investments yet"
+          }
           pagination={
             investments.length > 0
               ? { type: "sychronous", limit: 8 }

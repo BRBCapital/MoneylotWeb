@@ -352,6 +352,7 @@ export default function FilterModal({
             width="80px"
             fontSize="text-[11px]"
             label="Reset"
+            className="flex items-center justify-center py-0 leading-none"
             onClick={reset}
           />
           <Button.SmPrimary
@@ -359,6 +360,7 @@ export default function FilterModal({
             width="110px"
             fontSize="text-[11px]"
             label="Apply Filter"
+            className="flex items-center justify-center py-0 leading-none"
             onClick={() => {
               onApply(payload);
               setOpen(false);

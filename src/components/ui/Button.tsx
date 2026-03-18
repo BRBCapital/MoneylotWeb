@@ -32,7 +32,7 @@ export function SmPrimary({
   const cls = `
     ${fullWidth ? "w-full" : ""}
     ${fontSize}
-    text-center text-black font-medium px-4 py-2 rounded-lg
+    inline-flex items-center justify-center text-black font-medium px-4 rounded-lg leading-none
   `;
 
   const isDisabled = disabled || !!loading;
@@ -122,7 +122,7 @@ export function SmSecondary({
   const cls = `
     ${fullWidth ? "w-full" : ""}
     ${fontSize}
-    text-center font-semibold px-4 py-2 rounded-lg
+    inline-flex items-center justify-center font-semibold px-4 rounded-lg leading-none
   `;
 
   const isDisabled = disabled || !!loading;

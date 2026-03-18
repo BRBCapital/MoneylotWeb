@@ -28,6 +28,14 @@ export default function TransactionsPage() {
   const [pageSize, setPageSize] = useState(20);
   const [totalRecords, setTotalRecords] = useState(0);
 
+  const hasActiveFilter = useMemo(() => {
+    const d = filter?.date || "All";
+    const t = filter?.type || "All";
+    const min = (filter?.minAmount || "").trim();
+    const max = (filter?.maxAmount || "").trim();
+    return d !== "All" || t !== "All" || Boolean(min) || Boolean(max);
+  }, [filter]);
+
   function toIsoDate(d: Date) {
     return d.toISOString().slice(0, 10); // YYYY-MM-DD
   }
@@ -199,13 +207,6 @@ export default function TransactionsPage() {
 
         <div className="mt-5 bg-white rounded-[10px] p-6 relative">
           <LoadingOverlay show={loading} label="Loading transactions..." />
-          {!loading && !error && rows.length === 0 ? (
-            <div className="flex items-center justify-between">
-              <p className="text-[17px] font-semibold text-[#2E2E2E]">
-                All Transactions
-              </p>
-            </div>
-          ) : (
             <div className="flex items-center justify-between">
               <p className="text-[17px] font-semibold text-[#2E2E2E]">
                 All Transactions
@@ -248,7 +249,6 @@ export default function TransactionsPage() {
                 ) : null}
               </div>
             </div>
-          )}
 
           <div className="mt-4">
             {error ? (
@@ -260,7 +260,11 @@ export default function TransactionsPage() {
               headers={headers}
               data={rows}
               loading={loading}
-              emptyText="No transactions yet"
+              emptyText={
+                hasActiveFilter
+                  ? "No transactions qualify for these options"
+                  : "No transactions yet"
+              }
               pagination={
                 !loading && !error && rows.length === 0
                   ? undefined
