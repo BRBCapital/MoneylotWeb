@@ -94,7 +94,7 @@ export default function TransactionsFilterPopover({
   if (!open) return null;
 
   return (
-    <div className="w-[344px] rounded-[10px] bg-white border border-[#E9E9E9] shadow-lg p-4">
+    <div className="w-[344px] rounded-[10px] bg-white border border-[#E9E9E9] shadow-lg p-4 text-[#000000]">
       <div className="flex justify-between items-center border-b border-gray-200 pt-1 pb-2">
         <h4 className="font-semibold text-sm">Filter by</h4>
         <button
@@ -113,7 +113,7 @@ export default function TransactionsFilterPopover({
         </button>
       </div>
 
-      <div className="space-y-2 mt-3 text-[12px]">
+      <div className="space-y-2 mt-3 text-[12px] text-[#000000]">
         {/* Date */}
         <div className="border-b border-gray-200 pb-2">
           <button
@@ -155,7 +155,7 @@ export default function TransactionsFilterPopover({
                 placeholder="Min"
                 value={payload.minAmount || ""}
                 onChange={(e) => setPayload((p) => ({ ...p, minAmount: e.target.value }))}
-                className="w-full border border-gray-300 rounded-md px-2 py-1 text-xs"
+                className="w-full border border-gray-300 rounded-md px-2 py-1 text-xs text-[#000000] placeholder:text-[#9CA3AF]"
               />
               <span className="text-gray-500 text-xs">-</span>
               <input
@@ -163,7 +163,7 @@ export default function TransactionsFilterPopover({
                 placeholder="Max"
                 value={payload.maxAmount || ""}
                 onChange={(e) => setPayload((p) => ({ ...p, maxAmount: e.target.value }))}
-                className="w-full border border-gray-300 rounded-md px-2 py-1 text-xs"
+                className="w-full border border-gray-300 rounded-md px-2 py-1 text-xs text-[#000000] placeholder:text-[#9CA3AF]"
               />
             </div>
           ) : null}

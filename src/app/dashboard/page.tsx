@@ -316,7 +316,7 @@ export default function DashboardPage() {
   );
 
   const tableHeaders = [
-    { text: "Transaction Type", type: "text" as const },
+    { text: "Investment Type", type: "text" as const },
     { text: "Current Balance", type: "text" as const },
     { text: "Expected Yield", type: "text" as const },
     { text: "Status", type: "component" as const },
@@ -424,7 +424,7 @@ export default function DashboardPage() {
       </div>
 
       {/* My Investments Section */}
-      <div className="bg-white rounded-[10px] p-6">
+      <div className="bg-white rounded-[10px] py-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-[17px] font-semibold text-[#2E2E2E]">
             My Investments

@@ -453,6 +453,7 @@ export default function NewInvestmentPage() {
   useEffect(() => {
     if (step !== 3) return;
     if (fundCalledRef.current) return;
+    if (checkout || checkoutRef) return;
 
     const investmentId = createdInvestmentId;
     if (investmentId == null) {
@@ -515,7 +516,7 @@ export default function NewInvestmentPage() {
         setFundingLoading(false);
       }
     })();
-  }, [amount, createdInvestmentId, step, transactionPin]);
+  }, [amount, checkout, checkoutRef, createdInvestmentId, step, transactionPin]);
 
   return (
     <OnboardingShell stage={4} totalStages={4} showProgress={false}>
@@ -849,35 +850,72 @@ export default function NewInvestmentPage() {
               throw new Error("Please confirm to continue.");
             }
             try {
-              setTransactionPin(pin);
-              const res = await createInvestment({
-                amount,
-                expectedReturn,
-                typeId: selectedTypeId,
-                tenorId: selectedTenorId,
-                acknowledge: true,
-              });
-              console.log(
-                "[New Investment] webinvestment/create response:",
-                res,
-              );
-              const id = extractInvestmentId(res?.data);
-              if (id != null) setCreatedInvestmentId(id);
-              if (typeof window !== "undefined") {
-                window.sessionStorage.setItem(
-                  FUND_CTX_KEY,
-                  JSON.stringify({
-                    investmentId: id,
-                    transactionPin: pin,
-                    amount,
-                  }),
+              setFundingError(null);
+              setFundingLoading(true);
+              setCheckout(null);
+              setCheckoutRef(null);
+              setCheckoutExpiryAtMs(null);
+              let investmentId = createdInvestmentId;
+              if (investmentId == null) {
+                const res = await createInvestment({
+                  amount,
+                  expectedReturn,
+                  typeId: selectedTypeId,
+                  tenorId: selectedTenorId,
+                  acknowledge: true,
+                });
+                console.log(
+                  "[New Investment] webinvestment/create response:",
+                  res,
                 );
+                const id = extractInvestmentId(res?.data);
+                if (id == null) {
+                  throw new Error("Missing investment ID from create response.");
+                }
+                investmentId = id;
+                setCreatedInvestmentId(id);
+              }
+              setTransactionPin(pin);
+
+              const payload = {
+                paymentOptionId: 2,
+                investmentId,
+                amount,
+                transactionPin: pin,
+              };
+              console.log("[New Investment] investment/fund payload:", payload);
+              const fundRes = await fundInvestment(payload);
+              console.log("[New Investment] investment/fund response:", fundRes);
+
+              setCheckoutRef(typeof fundRes?.message === "string" ? fundRes.message : null);
+              const raw = (fundRes as any)?.data;
+              const checkoutData =
+                raw &&
+                typeof raw === "object" &&
+                (raw as any).data &&
+                typeof (raw as any).data === "object"
+                  ? (raw as any).data
+                  : raw;
+              if (checkoutData && typeof checkoutData === "object") {
+                setCheckout(checkoutData as FundInvestmentCheckoutData);
+                const mins = (checkoutData as any)?.expiryInMinutes;
+                if (typeof mins === "number" && Number.isFinite(mins) && mins > 0) {
+                  setCheckoutExpiryAtMs(Date.now() + mins * 60 * 1000);
+                }
+              }
+
+              // prevent step 3 auto-fund effect from running again
+              fundCalledRef.current = true;
+              if (typeof window !== "undefined") {
+                window.sessionStorage.removeItem(FUND_CTX_KEY);
               }
               setStep(3);
             } catch (e) {
               if (e instanceof ApiError) throw new Error(e.message);
               if (e instanceof Error) throw e;
               throw new Error("Unable to create investment. Please try again.");
+            } finally {
+              setFundingLoading(false);
             }
           }}
         />

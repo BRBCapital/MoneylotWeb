@@ -1376,6 +1376,7 @@ export default function GetStartedPage() {
       return;
     }
     if (fundCalledRef.current) return;
+    if (checkout || checkoutRef) return;
 
     const investmentId = createdInvestmentId;
     if (investmentId == null) {
@@ -1430,7 +1431,14 @@ export default function GetStartedPage() {
         setFundingLoading(false);
       }
     })();
-  }, [createdInvestmentId, investmentAmount, investmentTransactionPin, stage]);
+  }, [
+    checkout,
+    checkoutRef,
+    createdInvestmentId,
+    investmentAmount,
+    investmentTransactionPin,
+    stage,
+  ]);
 
   return (
     <OnboardingShell stage={progressStage} totalStages={4}>
@@ -1700,20 +1708,59 @@ export default function GetStartedPage() {
             }
             try {
               setCreateInvestmentLoading(true);
+              setFundingError(null);
+              setFundingLoading(true);
+              setCheckout(null);
+              setCheckoutRef(null);
+              setCheckoutExpiryAtMs(null);
               setInvestmentTransactionPin(pin);
-              const res = await createInvestment({
-                amount: amt,
-                expectedReturn,
-                typeId: selectedTypeId,
-                tenorId: selectedTenorId,
-                acknowledge: true,
-              });
-              console.log("[Stage 5] webinvestment/create response:", res);
-              const id = extractInvestmentId(res?.data);
-              if (id == null) {
-                throw new Error("Missing investment ID from create response.");
+              let investmentId = createdInvestmentId;
+              if (investmentId == null) {
+                const res = await createInvestment({
+                  amount: amt,
+                  expectedReturn,
+                  typeId: selectedTypeId,
+                  tenorId: selectedTenorId,
+                  acknowledge: true,
+                });
+                console.log("[Stage 5] webinvestment/create response:", res);
+                const id = extractInvestmentId(res?.data);
+                if (id == null) {
+                  throw new Error("Missing investment ID from create response.");
+                }
+                investmentId = id;
+                setCreatedInvestmentId(id);
               }
-              setCreatedInvestmentId(id);
+
+              const payload = {
+                paymentOptionId: 2,
+                investmentId,
+                amount: amt,
+                transactionPin: pin,
+              };
+              console.log("[Stage 5] investment/fund payload:", payload);
+              const fundRes = await fundInvestment(payload);
+              console.log("[Stage 5] investment/fund response:", fundRes);
+
+              setCheckoutRef(typeof fundRes?.message === "string" ? fundRes.message : null);
+              const raw = (fundRes as any)?.data;
+              const checkoutData =
+                raw &&
+                typeof raw === "object" &&
+                (raw as any).data &&
+                typeof (raw as any).data === "object"
+                  ? (raw as any).data
+                  : raw;
+              if (checkoutData && typeof checkoutData === "object") {
+                setCheckout(checkoutData as FundInvestmentCheckoutData);
+                const mins = (checkoutData as any)?.expiryInMinutes;
+                if (typeof mins === "number" && Number.isFinite(mins) && mins > 0) {
+                  setCheckoutExpiryAtMs(Date.now() + mins * 60 * 1000);
+                }
+              }
+
+              // prevent stage 6 auto-fund effect from running again
+              fundCalledRef.current = true;
               setStage(6);
             } catch (e) {
               if (e instanceof ApiError) throw new Error(e.message);
@@ -1721,6 +1768,7 @@ export default function GetStartedPage() {
               throw new Error("Unable to create investment. Please try again.");
             } finally {
               setCreateInvestmentLoading(false);
+              setFundingLoading(false);
             }
           }}
         />
