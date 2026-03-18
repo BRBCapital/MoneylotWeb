@@ -11,7 +11,7 @@ import {
   InvestmentDetailDto,
 } from "@/services/webinvestment";
 import { ApiError } from "@/lib/apiClient";
-import { formatNGN } from "@/lib/investment";
+import { applyWithholdingTax, formatNGN } from "@/lib/investment";
 import { isAbortError } from "@/lib/isAbortError";
 import LoadingOverlay from "@/components/ui/LoadingOverlay";
 
@@ -119,7 +119,7 @@ export default function InvestmentDetails({
       },
       {
         label: "Expected Returns",
-        value: d ? formatNGN(safeNum(d.expectedReturn)) : "-",
+        value: d ? formatNGN(applyWithholdingTax(safeNum(d.expectedReturn))) : "-",
       },
       { label: "Date Created", value: d ? safeText(d.dateCreated) : "-" },
       { label: "Maturity Date", value: d ? safeText(d.maturityDate) : "-" },

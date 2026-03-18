@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import {
   addDays,
+  applyWithholdingToTotal,
   computeSimpleInterest,
   formatDateLong,
   formatNGN,
@@ -31,16 +32,22 @@ export default function InvestmentConfirmationTable({
       typeof expectedReturnOverride === "number" && Number.isFinite(expectedReturnOverride)
         ? expectedReturnOverride
         : null;
-    const expected = override ?? base.expectedReturns;
+    const expectedGross = override ?? base.expectedReturns;
 
     const totalOverride =
       typeof totalAtMaturityOverride === "number" && Number.isFinite(totalAtMaturityOverride)
         ? totalAtMaturityOverride
         : null;
 
+    const totalGross = totalOverride ?? amount + expectedGross;
+    const { netExpected, netTotal } = applyWithholdingToTotal({
+      grossExpected: expectedGross,
+      grossTotal: totalGross,
+    });
+
     return {
-      expectedReturns: expected,
-      totalAtMaturity: totalOverride ?? amount + expected,
+      expectedReturns: netExpected,
+      totalAtMaturity: netTotal,
       maturityDate: addDays(new Date(), tenorDays),
     };
   }, [amount, ratePa, tenorDays, expectedReturnOverride, totalAtMaturityOverride]);

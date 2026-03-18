@@ -46,3 +46,28 @@ export function computeSimpleInterest({
   return { expectedReturns, totalAtMaturity, maturityDate };
 }
 
+export const WITHHOLDING_TAX_RATE = 0.1;
+
+export function applyWithholdingTax(gross: number, rate = WITHHOLDING_TAX_RATE) {
+  const g = typeof gross === "number" && Number.isFinite(gross) ? gross : 0;
+  const r = typeof rate === "number" && Number.isFinite(rate) ? rate : WITHHOLDING_TAX_RATE;
+  const clamped = Math.min(Math.max(r, 0), 1);
+  return g * (1 - clamped);
+}
+
+export function applyWithholdingToTotal({
+  grossExpected,
+  grossTotal,
+  rate = WITHHOLDING_TAX_RATE,
+}: {
+  grossExpected: number;
+  grossTotal: number;
+  rate?: number;
+}) {
+  const netExpected = applyWithholdingTax(grossExpected, rate);
+  const tax = (typeof grossExpected === "number" && Number.isFinite(grossExpected) ? grossExpected : 0) - netExpected;
+  const total = typeof grossTotal === "number" && Number.isFinite(grossTotal) ? grossTotal : 0;
+  const netTotal = total - tax;
+  return { netExpected, netTotal };
+}
+

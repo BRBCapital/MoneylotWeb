@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import Image from "next/image";
 import {
+  applyWithholdingToTotal,
   computeSimpleInterest,
   formatDateLong,
   formatNGN,
@@ -22,6 +23,13 @@ export default function InvestmentSummary({
     return computeSimpleInterest({ principal: amount, ratePa, tenorDays });
   }, [amount, ratePa, tenorDays]);
 
+  const { netExpected, netTotal } = useMemo(() => {
+    return applyWithholdingToTotal({
+      grossExpected: expectedReturns,
+      grossTotal: totalAtMaturity,
+    });
+  }, [expectedReturns, totalAtMaturity]);
+
   return (
     <div className="fade-in mt-5 rounded-[10px] border border-[#89E081] bg-[#5FCE551A]">
       <div className="grid grid-cols-1">
@@ -29,8 +37,8 @@ export default function InvestmentSummary({
           ["Investment Amount", formatNGN(amount)],
           ["Interest Rate (p.a)", `${(ratePa * 100).toFixed(2)}%`],
           ["Tenor", `${tenorDays} Days`],
-          ["Expected Returns", formatNGN(expectedReturns)],
-          ["Total at Maturity", formatNGN(totalAtMaturity)],
+          ["Expected Returns", formatNGN(netExpected)],
+          ["Total at Maturity", formatNGN(netTotal)],
           ["Maturity Date", formatDateLong(maturityDate)],
         ].map(([label, value], idx) => (
           <div

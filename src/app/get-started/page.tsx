@@ -60,7 +60,11 @@ import {
 import useCountdown from "@/hooks/useCountdown";
 import LoadingOverlay from "@/components/ui/LoadingOverlay";
 import { isAbortError } from "@/lib/isAbortError";
-import { secureGetJson, secureRemove, secureSetJson } from "@/lib/secureStorage";
+import {
+  secureGetJson,
+  secureRemove,
+  secureSetJson,
+} from "@/lib/secureStorage";
 import IconCheckbox from "@/components/ui/IconCheckbox";
 import { City, State } from "country-state-city";
 import Stage1AccountCreation from "@/app/get-started/_components/Stage1AccountCreation";
@@ -110,7 +114,10 @@ function isValidPersonName(value: string) {
 
 function normalizePhone(countryCode: string, phoneNumber: string) {
   const cc = (countryCode || "").trim();
-  const pnDigits = (phoneNumber || "").replace(/\s+/g, "").replace(/[^\d]/g, "").trim();
+  const pnDigits = (phoneNumber || "")
+    .replace(/\s+/g, "")
+    .replace(/[^\d]/g, "")
+    .trim();
   // Don't allow country code alone to pass validation
   if (!pnDigits) return "";
   return `${cc}${pnDigits}`;
@@ -132,14 +139,19 @@ export default function GetStartedPage() {
     null,
   );
   const [checkoutRef, setCheckoutRef] = useState<string | null>(null);
-  const [checkoutExpiryAtMs, setCheckoutExpiryAtMs] = useState<number | null>(null);
+  const [checkoutExpiryAtMs, setCheckoutExpiryAtMs] = useState<number | null>(
+    null,
+  );
   const [fundingLoading, setFundingLoading] = useState(false);
   const [fundingError, setFundingError] = useState<string | null>(null);
   const fundCalledRef = useRef(false);
   const [flowHydrated, setFlowHydrated] = useState(false);
 
   const expirySeconds = useMemo(() => {
-    if (typeof checkoutExpiryAtMs === "number" && Number.isFinite(checkoutExpiryAtMs)) {
+    if (
+      typeof checkoutExpiryAtMs === "number" &&
+      Number.isFinite(checkoutExpiryAtMs)
+    ) {
       return Math.max(0, Math.floor((checkoutExpiryAtMs - Date.now()) / 1000));
     }
     const m = checkout?.expiryInMinutes;
@@ -190,15 +202,7 @@ export default function GetStartedPage() {
   const [stage2Error, setStage2Error] = useState<string | null>(null);
   const [stage2FieldErrors, setStage2FieldErrors] = useState<
     Partial<
-      Record<
-        | "dob"
-        | "bvn"
-        | "country"
-        | "address"
-        | "state"
-        | "city",
-        string
-      >
+      Record<"dob" | "bvn" | "country" | "address" | "state" | "city", string>
     >
   >({});
   const [accountTypesLoading, setAccountTypesLoading] = useState(false);
@@ -347,14 +351,26 @@ export default function GetStartedPage() {
         const s = Number((saved as any).stage);
         if (Number.isFinite(s) && s >= 1 && s <= 7) setStage(s as any);
 
-        setFirstName(typeof saved.firstName === "string" ? saved.firstName : "");
+        setFirstName(
+          typeof saved.firstName === "string" ? saved.firstName : "",
+        );
         setLastName(typeof saved.lastName === "string" ? saved.lastName : "");
-        setAccountType(typeof saved.accountType === "string" ? saved.accountType : "");
-        setCountryCode(typeof saved.countryCode === "string" ? saved.countryCode : "+234");
-        setPhoneNumber(typeof saved.phoneNumber === "string" ? saved.phoneNumber : "");
+        setAccountType(
+          typeof saved.accountType === "string" ? saved.accountType : "",
+        );
+        setCountryCode(
+          typeof saved.countryCode === "string" ? saved.countryCode : "+234",
+        );
+        setPhoneNumber(
+          typeof saved.phoneNumber === "string" ? saved.phoneNumber : "",
+        );
         setEmail(typeof saved.email === "string" ? saved.email : "");
         setPassword(typeof saved.password === "string" ? saved.password : "");
-        setConfirmPassword(typeof saved.confirmPassword === "string" ? saved.confirmPassword : "");
+        setConfirmPassword(
+          typeof saved.confirmPassword === "string"
+            ? saved.confirmPassword
+            : "",
+        );
         setAcceptedTerms(Boolean(saved.acceptedTerms));
 
         setBvn(typeof saved.bvn === "string" ? saved.bvn : "");
@@ -363,26 +379,73 @@ export default function GetStartedPage() {
         setAddress(typeof saved.address === "string" ? saved.address : "");
         setCity(typeof saved.city === "string" ? saved.city : "");
         setState_(typeof saved.state === "string" ? saved.state : "");
-        setStateCode(typeof saved.stateCode === "string" ? saved.stateCode : "");
+        setStateCode(
+          typeof saved.stateCode === "string" ? saved.stateCode : "",
+        );
 
         setBankName(typeof saved.bankName === "string" ? saved.bankName : "");
-        setAccountNumber(typeof saved.accountNumber === "string" ? saved.accountNumber : "");
-        setAccountName(typeof saved.accountName === "string" ? saved.accountName : "");
+        setAccountNumber(
+          typeof saved.accountNumber === "string" ? saved.accountNumber : "",
+        );
+        setAccountName(
+          typeof saved.accountName === "string" ? saved.accountName : "",
+        );
 
-        setInvestmentAmount(typeof saved.investmentAmount === "string" ? saved.investmentAmount : "");
-        setSelectedRateId(typeof saved.selectedRateId === "number" ? saved.selectedRateId : null);
-        setExpectedReturn(typeof saved.expectedReturn === "number" ? saved.expectedReturn : null);
-        setTotalAtMaturity(typeof saved.totalAtMaturity === "number" ? saved.totalAtMaturity : null);
-        setMaturityDateText(typeof saved.maturityDateText === "string" ? saved.maturityDateText : null);
+        setInvestmentAmount(
+          typeof saved.investmentAmount === "string"
+            ? saved.investmentAmount
+            : "",
+        );
+        setSelectedRateId(
+          typeof saved.selectedRateId === "number"
+            ? saved.selectedRateId
+            : null,
+        );
+        setExpectedReturn(
+          typeof saved.expectedReturn === "number"
+            ? saved.expectedReturn
+            : null,
+        );
+        setTotalAtMaturity(
+          typeof saved.totalAtMaturity === "number"
+            ? saved.totalAtMaturity
+            : null,
+        );
+        setMaturityDateText(
+          typeof saved.maturityDateText === "string"
+            ? saved.maturityDateText
+            : null,
+        );
         setAcknowledgeInvestment(Boolean(saved.acknowledgeInvestment));
 
-        setCreatedInvestmentId(typeof saved.createdInvestmentId === "number" ? saved.createdInvestmentId : null);
-        setInvestmentTransactionPin(typeof saved.investmentTransactionPin === "string" ? saved.investmentTransactionPin : "");
-        setCheckout(saved.checkout && typeof saved.checkout === "object" ? (saved.checkout as any) : null);
-        setCheckoutRef(typeof saved.checkoutRef === "string" ? saved.checkoutRef : null);
-        setCheckoutExpiryAtMs(typeof saved.checkoutExpiryAtMs === "number" ? saved.checkoutExpiryAtMs : null);
+        setCreatedInvestmentId(
+          typeof saved.createdInvestmentId === "number"
+            ? saved.createdInvestmentId
+            : null,
+        );
+        setInvestmentTransactionPin(
+          typeof saved.investmentTransactionPin === "string"
+            ? saved.investmentTransactionPin
+            : "",
+        );
+        setCheckout(
+          saved.checkout && typeof saved.checkout === "object"
+            ? (saved.checkout as any)
+            : null,
+        );
+        setCheckoutRef(
+          typeof saved.checkoutRef === "string" ? saved.checkoutRef : null,
+        );
+        setCheckoutExpiryAtMs(
+          typeof saved.checkoutExpiryAtMs === "number"
+            ? saved.checkoutExpiryAtMs
+            : null,
+        );
 
-        if (saved.stage1SignupContext && typeof saved.stage1SignupContext === "object") {
+        if (
+          saved.stage1SignupContext &&
+          typeof saved.stage1SignupContext === "object"
+        ) {
           setStage1SignupContext((prev) => ({
             ...prev,
             ...saved.stage1SignupContext,
@@ -579,10 +642,10 @@ export default function GetStartedPage() {
       console.log("[Stage 4] get-expected-return response:", res);
       setExpectedReturn(res.expectedReturn);
       setTotalAtMaturity(
-        typeof res.totalAtMaturity === "number" ? res.totalAtMaturity : null
+        typeof res.totalAtMaturity === "number" ? res.totalAtMaturity : null,
       );
       setMaturityDateText(
-        typeof res.maturityDate === "string" ? res.maturityDate : null
+        typeof res.maturityDate === "string" ? res.maturityDate : null,
       );
       setAcknowledgeInvestment(false);
       setCreateInvestmentError(null);
@@ -855,7 +918,7 @@ export default function GetStartedPage() {
                     : undefined,
               ninVerified: Boolean(
                 (loginRes.data as any).ninVerified ??
-                  (loginRes.data as any).isNINVerified,
+                (loginRes.data as any).isNINVerified,
               ),
             });
           } catch {
@@ -876,7 +939,7 @@ export default function GetStartedPage() {
               userId:
                 typeof d?.userId === "number"
                   ? d.userId
-                  : resumeUserId ?? prev.userId,
+                  : (resumeUserId ?? prev.userId),
               accountId: resumeAccountId ?? prev.accountId,
               emailAddress: emailValue,
               password,
@@ -925,7 +988,9 @@ export default function GetStartedPage() {
       }
 
       if (!res?.status) {
-        setStage1Error(res?.message || "Unable to create account. Please try again.");
+        setStage1Error(
+          res?.message || "Unable to create account. Please try again.",
+        );
         return;
       }
 
@@ -1017,7 +1082,7 @@ export default function GetStartedPage() {
                     : undefined,
               ninVerified: Boolean(
                 (loginRes.data as any).ninVerified ??
-                  (loginRes.data as any).isNINVerified,
+                (loginRes.data as any).isNINVerified,
               ),
             });
           } catch {
@@ -1038,7 +1103,7 @@ export default function GetStartedPage() {
               userId:
                 typeof d?.userId === "number"
                   ? d.userId
-                  : resumeUserId ?? prev.userId,
+                  : (resumeUserId ?? prev.userId),
               accountId: resumeAccountId ?? prev.accountId,
               emailAddress: emailValue,
               password,
@@ -1179,7 +1244,10 @@ export default function GetStartedPage() {
       });
       console.log("[Stage 2] validate-identity-address response:", res);
 
-      showSuccessToast("Success", res?.message || "Identity verified successfully");
+      showSuccessToast(
+        "Success",
+        res?.message || "Identity verified successfully",
+      );
       setStage(3);
       // Clear Stage 2 inputs after successful submission.
       clearStage2Form();
@@ -1239,7 +1307,8 @@ export default function GetStartedPage() {
     const errs: typeof stage3FieldErrors = {};
     if (!bankCode) errs.bankName = "Select a bank";
     if (!acctNo) errs.accountNumber = "Account number is required";
-    else if (acctNo.length < 10) errs.accountNumber = "Enter a valid account number";
+    else if (acctNo.length < 10)
+      errs.accountNumber = "Enter a valid account number";
     if (!acctName) errs.accountName = "Resolve account name to continue";
     if (Object.keys(errs).length > 0) {
       setStage3FieldErrors(errs);
@@ -1255,7 +1324,10 @@ export default function GetStartedPage() {
         accountNumber: acctNo,
       });
       console.log("[Stage 3] withdrawal/create response:", res);
-      showSuccessToast("Success", res?.message || "Bank details saved successfully");
+      showSuccessToast(
+        "Success",
+        res?.message || "Bank details saved successfully",
+      );
       setPinOpen(true);
       // Clear Stage 3 inputs after successful submission.
       clearStage3Form();
@@ -1451,7 +1523,8 @@ export default function GetStartedPage() {
           if (!data) return "";
           if (typeof data === "string") return data.trim();
           if (typeof data !== "object") return "";
-          const direct = typeof data.accountName === "string" ? data.accountName.trim() : "";
+          const direct =
+            typeof data.accountName === "string" ? data.accountName.trim() : "";
           if (direct) return direct;
           const nestedData = (data as any).data;
           if (typeof nestedData === "string") return nestedData.trim();
@@ -1466,7 +1539,9 @@ export default function GetStartedPage() {
 
         if (!resolved) {
           setAccountName("");
-          setStage3Error("Unable to resolve account name. Please confirm details.");
+          setStage3Error(
+            "Unable to resolve account name. Please confirm details.",
+          );
           return;
         }
 
@@ -1476,8 +1551,13 @@ export default function GetStartedPage() {
         if (resolveSeqRef.current !== seq) return;
         setAccountName("");
         if (e instanceof ApiError) setStage3Error(e.message);
-        else if (e instanceof TypeError && /failed to fetch/i.test(String(e.message || ""))) {
-          setStage3Error("Unable to validate account. Please check your connection and try again.");
+        else if (
+          e instanceof TypeError &&
+          /failed to fetch/i.test(String(e.message || ""))
+        ) {
+          setStage3Error(
+            "Unable to validate account. Please check your connection and try again.",
+          );
         } else if (e instanceof Error) setStage3Error(e.message);
         else setStage3Error("Unable to validate account. Please try again.");
       } finally {
@@ -1694,7 +1774,9 @@ export default function GetStartedPage() {
             accountNumber={checkout?.accountNumber || "-"}
             accountName={checkout?.accountName || "-"}
             expiryFormatted={expiryCountdown.formatted}
-            totalToTransferFormatted={formatNGN(parseMoney(investmentAmount) + 50)}
+            totalToTransferFormatted={formatNGN(
+              parseMoney(investmentAmount) + 50,
+            )}
             onBack={() => setStage(5)}
             onMadePayment={onStage6MadePayment}
           />
@@ -1705,11 +1787,21 @@ export default function GetStartedPage() {
         <OtpModal
           open={otpOpen}
           setOpen={setOtpOpen}
-          email={(stage1SignupContext.emailAddress || getUserEmail() || email || "").trim()}
+          email={(
+            stage1SignupContext.emailAddress ||
+            getUserEmail() ||
+            email ||
+            ""
+          ).trim()}
           isLoading={otpLoading}
           confirmLabel="Verify"
           onResend={async () => {
-            const e = (stage1SignupContext.emailAddress || getUserEmail() || email || "").trim();
+            const e = (
+              stage1SignupContext.emailAddress ||
+              getUserEmail() ||
+              email ||
+              ""
+            ).trim();
             if (!e) {
               setStage1Error("Missing email. Please submit Stage 1 again.");
               return;
@@ -1739,7 +1831,10 @@ export default function GetStartedPage() {
                 Boolean(stage1SignupContext.password);
 
               if (authMode) {
-                const otpRes = await webValidateOtp(stage1SignupContext.userId, otp);
+                const otpRes = await webValidateOtp(
+                  stage1SignupContext.userId,
+                  otp,
+                );
                 console.log("[Stage 1] otp/web-validate-otp response:", otpRes);
 
                 // Login in the background with Stage 1 credentials.
@@ -1772,12 +1867,14 @@ export default function GetStartedPage() {
                   kycStatus:
                     typeof (loginRes.data as any).kycStatus === "number"
                       ? (loginRes.data as any).kycStatus
-                      : Number.isFinite(Number((loginRes.data as any).kycStatus))
+                      : Number.isFinite(
+                            Number((loginRes.data as any).kycStatus),
+                          )
                         ? Number((loginRes.data as any).kycStatus)
                         : undefined,
                   ninVerified: Boolean(
                     (loginRes.data as any).ninVerified ??
-                      (loginRes.data as any).isNINVerified
+                    (loginRes.data as any).isNINVerified,
                   ),
                 });
               } else {
@@ -1858,7 +1955,9 @@ export default function GetStartedPage() {
                 console.log("[Stage 5] webinvestment/create response:", res);
                 const id = extractInvestmentId(res?.data);
                 if (id == null) {
-                  throw new Error("Missing investment ID from create response.");
+                  throw new Error(
+                    "Missing investment ID from create response.",
+                  );
                 }
                 investmentId = id;
                 setCreatedInvestmentId(id);
@@ -1874,7 +1973,9 @@ export default function GetStartedPage() {
               const fundRes = await fundInvestment(payload);
               console.log("[Stage 5] investment/fund response:", fundRes);
 
-              setCheckoutRef(typeof fundRes?.message === "string" ? fundRes.message : null);
+              setCheckoutRef(
+                typeof fundRes?.message === "string" ? fundRes.message : null,
+              );
               const raw = (fundRes as any)?.data;
               const checkoutData =
                 raw &&
@@ -1886,7 +1987,11 @@ export default function GetStartedPage() {
               if (checkoutData && typeof checkoutData === "object") {
                 setCheckout(checkoutData as FundInvestmentCheckoutData);
                 const mins = (checkoutData as any)?.expiryInMinutes;
-                if (typeof mins === "number" && Number.isFinite(mins) && mins > 0) {
+                if (
+                  typeof mins === "number" &&
+                  Number.isFinite(mins) &&
+                  mins > 0
+                ) {
                   setCheckoutExpiryAtMs(Date.now() + mins * 60 * 1000);
                 }
               }

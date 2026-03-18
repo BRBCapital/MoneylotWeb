@@ -10,7 +10,12 @@ import InvestmentSummary from "@/components/organisms/onboarding/InvestmentSumma
 import PaymentDetailsTable from "@/components/organisms/onboarding/PaymentDetailsTable";
 import EnterTransactionPinModal from "@/components/modals/EnterTransactionPinModal";
 import { imagesAndIcons } from "@/constants/imagesAndIcons";
-import { formatDateLong, formatNGN, parseMoney } from "@/lib/investment";
+import {
+  applyWithholdingToTotal,
+  formatDateLong,
+  formatNGN,
+  parseMoney,
+} from "@/lib/investment";
 import { ApiError } from "@/lib/apiClient";
 import {
   createInvestment,
@@ -169,15 +174,15 @@ export default function NewInvestmentPage() {
   const [selectedRateId, setSelectedRateId] = useState<number | null>(null);
 
   // Locked snapshot for steps 2+ (so step 1 can be cleared)
-  const [confirmedAmountInput, setConfirmedAmountInput] = useState<string | null>(
-    null,
-  );
+  const [confirmedAmountInput, setConfirmedAmountInput] = useState<
+    string | null
+  >(null);
   const [confirmedRateId, setConfirmedRateId] = useState<number | null>(null);
 
   const effectiveAmountInput =
-    step === 1 ? investmentAmount : confirmedAmountInput ?? investmentAmount;
+    step === 1 ? investmentAmount : (confirmedAmountInput ?? investmentAmount);
   const effectiveRateId =
-    step === 1 ? selectedRateId : confirmedRateId ?? selectedRateId;
+    step === 1 ? selectedRateId : (confirmedRateId ?? selectedRateId);
 
   const selectedRate = useMemo(() => {
     if (effectiveRateId == null) return null;
@@ -214,7 +219,10 @@ export default function NewInvestmentPage() {
   const [tenorText, setTenorText] = useState<string | null>(null);
   const [acknowledge, setAcknowledge] = useState(false);
 
-  const amount = useMemo(() => parseMoney(effectiveAmountInput), [effectiveAmountInput]);
+  const amount = useMemo(
+    () => parseMoney(effectiveAmountInput),
+    [effectiveAmountInput],
+  );
 
   const isReady =
     effectiveAmountInput.trim() !== "" &&
@@ -239,6 +247,11 @@ export default function NewInvestmentPage() {
           ? amount + expected
           : null;
 
+    const net =
+      expected != null && total != null
+        ? applyWithholdingToTotal({ grossExpected: expected, grossTotal: total })
+        : null;
+
     return [
       ["Investment Type", investmentTypeText || "Fixed Deposit"],
       ["Investment Tenor", tenorText || `${selectedTenorDays} Days`],
@@ -247,8 +260,14 @@ export default function NewInvestmentPage() {
         rateFormattedText || `${(selectedRatePa * 100).toFixed(2)}% p.a`,
       ],
       ["Investment Amount", formatNGN(amount)],
-      ["Expected Returns", expected != null ? formatNGN(expected) : "-"],
-      ["Total at Maturity", total != null ? formatNGN(total) : "-"],
+      [
+        "Expected Returns",
+        net ? formatNGN(net.netExpected) : expected != null ? formatNGN(expected) : "-",
+      ],
+      [
+        "Total at Maturity",
+        net ? formatNGN(net.netTotal) : total != null ? formatNGN(total) : "-",
+      ],
       [
         "Maturity Date",
         maturityDateText?.trim()
@@ -310,25 +329,32 @@ export default function NewInvestmentPage() {
         const s = Number(saved.step);
         if (Number.isFinite(s) && s >= 1 && s <= 4) setStep(s as Step);
         const savedInvestmentAmount =
-          typeof saved.investmentAmount === "string" ? saved.investmentAmount : "";
+          typeof saved.investmentAmount === "string"
+            ? saved.investmentAmount
+            : "";
         const savedSelectedRateId =
-          typeof saved.selectedRateId === "number" ? saved.selectedRateId : null;
+          typeof saved.selectedRateId === "number"
+            ? saved.selectedRateId
+            : null;
         setInvestmentAmount(savedInvestmentAmount);
         setSelectedRateId(savedSelectedRateId);
 
         // Prefer explicit confirmed snapshot; otherwise migrate from old keys when step >= 2
         const savedConfirmedAmount =
-          typeof saved.confirmedAmountInput === "string" ? saved.confirmedAmountInput : null;
+          typeof saved.confirmedAmountInput === "string"
+            ? saved.confirmedAmountInput
+            : null;
         const savedConfirmedRateId =
-          typeof saved.confirmedRateId === "number" ? saved.confirmedRateId : null;
+          typeof saved.confirmedRateId === "number"
+            ? saved.confirmedRateId
+            : null;
         const stepValue = Number.isFinite(s) ? (s as Step) : 1;
         setConfirmedAmountInput(
           savedConfirmedAmount ??
             (stepValue >= 2 ? savedInvestmentAmount : null),
         );
         setConfirmedRateId(
-          savedConfirmedRateId ??
-            (stepValue >= 2 ? savedSelectedRateId : null),
+          savedConfirmedRateId ?? (stepValue >= 2 ? savedSelectedRateId : null),
         );
 
         setExpectedReturn(
@@ -516,7 +542,14 @@ export default function NewInvestmentPage() {
         setFundingLoading(false);
       }
     })();
-  }, [amount, checkout, checkoutRef, createdInvestmentId, step, transactionPin]);
+  }, [
+    amount,
+    checkout,
+    checkoutRef,
+    createdInvestmentId,
+    step,
+    transactionPin,
+  ]);
 
   return (
     <OnboardingShell stage={4} totalStages={4} showProgress={false}>
@@ -739,7 +772,10 @@ export default function NewInvestmentPage() {
                 fontSize="text-[11px]"
                 className="rounded-[8px] font-medium"
                 onClick={() => {
-                  if (!confirmedAmountInput?.trim() || confirmedRateId == null) {
+                  if (
+                    !confirmedAmountInput?.trim() ||
+                    confirmedRateId == null
+                  ) {
                     setExpectedError("Please restart this investment.");
                     return;
                   }
@@ -779,7 +815,9 @@ export default function NewInvestmentPage() {
             <p className="mt-1 text-center text-[11px] text-[#5F6368]">
               Transfer only{" "}
               <span className="font-semibold text-[#2E2E2E]">
-                {formatNGN(parseMoney(confirmedAmountInput ?? investmentAmount) + 50)}
+                {formatNGN(
+                  parseMoney(confirmedAmountInput ?? investmentAmount) + 50,
+                )}
               </span>{" "}
               to the account number above within the validity time
             </p>
@@ -870,7 +908,9 @@ export default function NewInvestmentPage() {
                 );
                 const id = extractInvestmentId(res?.data);
                 if (id == null) {
-                  throw new Error("Missing investment ID from create response.");
+                  throw new Error(
+                    "Missing investment ID from create response.",
+                  );
                 }
                 investmentId = id;
                 setCreatedInvestmentId(id);
@@ -885,9 +925,14 @@ export default function NewInvestmentPage() {
               };
               console.log("[New Investment] investment/fund payload:", payload);
               const fundRes = await fundInvestment(payload);
-              console.log("[New Investment] investment/fund response:", fundRes);
+              console.log(
+                "[New Investment] investment/fund response:",
+                fundRes,
+              );
 
-              setCheckoutRef(typeof fundRes?.message === "string" ? fundRes.message : null);
+              setCheckoutRef(
+                typeof fundRes?.message === "string" ? fundRes.message : null,
+              );
               const raw = (fundRes as any)?.data;
               const checkoutData =
                 raw &&
@@ -899,7 +944,11 @@ export default function NewInvestmentPage() {
               if (checkoutData && typeof checkoutData === "object") {
                 setCheckout(checkoutData as FundInvestmentCheckoutData);
                 const mins = (checkoutData as any)?.expiryInMinutes;
-                if (typeof mins === "number" && Number.isFinite(mins) && mins > 0) {
+                if (
+                  typeof mins === "number" &&
+                  Number.isFinite(mins) &&
+                  mins > 0
+                ) {
                   setCheckoutExpiryAtMs(Date.now() + mins * 60 * 1000);
                 }
               }
