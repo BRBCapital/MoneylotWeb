@@ -19,12 +19,15 @@ import { formatNGN } from "@/lib/investment";
 import LoadingOverlay from "@/components/ui/LoadingOverlay";
 import { isAbortError } from "@/lib/isAbortError";
 import { useSearchParams } from "next/navigation";
+import { useAtomValue } from "jotai";
+import { authSessionAtom } from "@/state/appState";
 
 export default function DashboardPage() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [identityModalOpen, setIdentityModalOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState<FilterPayload>({});
   const searchParams = useSearchParams();
+  const session = useAtomValue(authSessionAtom);
 
   useEffect(() => {
     if (searchParams.get("verifyKyc") === "1") {
@@ -32,6 +35,22 @@ export default function DashboardPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
+
+  const kycStatus = useMemo(() => {
+    const raw = (session as any)?.kycStatus;
+    if (typeof raw === "number" && Number.isFinite(raw)) return raw;
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : 1;
+  }, [session]);
+
+  const kycVariant = useMemo<"new" | "pending" | "rejected" | "none">(() => {
+    // Enum:
+    // 1 New, 2 Pending, 3 Approved, 4 Rejected, 5 Abandoned
+    if (kycStatus === 3) return "none";
+    if (kycStatus === 2) return "pending";
+    if (kycStatus === 4) return "rejected";
+    return "new"; // New / Abandoned / unknown
+  }, [kycStatus]);
 
   const [loading, setLoading] = useState(false);
   const [listLoading, setListLoading] = useState(false);
@@ -324,6 +343,73 @@ export default function DashboardPage() {
         />
       </div>
       <DashboardHeader />
+
+      {/* KYC status */}
+      {kycVariant !== "none" ? (
+        <div
+          className={`mt-4 mb-6 flex items-center justify-between gap-4 px-4 py-3 border-l-[3px] ${
+            kycVariant === "rejected"
+              ? "bg-[#FFE8E8] border-l-[#FD0303]"
+              : "bg-[#FFF6DE] border-l-[#FDA803]"
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <Image
+              src={
+                kycVariant === "pending"
+                  ? imagesAndIcons.pending
+                  : kycVariant === "rejected"
+                    ? imagesAndIcons.failed
+                    : imagesAndIcons.completeProfile
+              }
+              alt="KYC"
+              width={32}
+              height={32}
+              className="h-[32px] w-[32px] shrink-0"
+            />
+            <div>
+              {kycVariant === "pending" ? (
+                <>
+                  <p className="text-[14px] font-bold text-[#684502] leading-5">
+                    KYC Verification Pending
+                  </p>
+                  <p className="mt-0.5 text-[13px] font-normal text-[#684502] leading-5">
+                    Your documents will be reviewed within 24 hours.
+                  </p>
+                </>
+              ) : kycVariant === "rejected" ? (
+                <>
+                  <p className="text-[14px] font-bold text-[#FD0303] leading-5">
+                    KYC Verification Rejected
+                  </p>
+                  <p className="mt-0.5 text-[13px] font-normal text-[#FD0303] leading-5">
+                    We couldn&apos;t verify your documents. Please try again.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-[14px] font-bold text-[#684502] leading-5">
+                    Complete your KYC verification
+                  </p>
+                  <p className="mt-0.5 text-[13px] font-normal text-[#684502] leading-5">
+                    Verify your identity to unlock all features.
+                  </p>
+                </>
+              )}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setIdentityModalOpen(true)}
+            className={`text-[13px] font-medium hover:opacity-80 ${
+              kycVariant === "rejected" ? "text-[#FD0303]" : "text-[#684502]"
+            }`}
+          >
+            Review
+          </button>
+        </div>
+      ) : null}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
