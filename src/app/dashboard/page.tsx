@@ -399,15 +399,17 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setIdentityModalOpen(true)}
-            className={`text-[13px] font-medium hover:opacity-80 ${
-              kycVariant === "rejected" ? "text-[#FD0303]" : "text-[#684502]"
-            }`}
-          >
-            Review
-          </button>
+          {kycVariant !== "pending" ? (
+            <button
+              type="button"
+              onClick={() => setIdentityModalOpen(true)}
+              className={`text-[13px] font-medium hover:opacity-80 ${
+                kycVariant === "rejected" ? "text-[#FD0303]" : "text-[#684502]"
+              }`}
+            >
+              Review
+            </button>
+          ) : null}
         </div>
       ) : null}
 

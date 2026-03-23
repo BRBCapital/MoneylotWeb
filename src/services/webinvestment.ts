@@ -414,6 +414,7 @@ export type InvestmentDetailDto = {
   maturityDate: string;
   dateRemaining: string; // "59 days"
   status: string; // "active" | "inactive" | "matured"
+  kycStatus?: number; // enum: 1 New, 2 Pending, 3 Approved, 4 Rejected, 5 Abandoned
 };
 
 export async function getInvestmentDetail(investmentId: number, signal?: AbortSignal) {

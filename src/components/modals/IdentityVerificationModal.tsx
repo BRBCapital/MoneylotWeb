@@ -8,6 +8,7 @@ import { imagesAndIcons } from "@/constants/imagesAndIcons";
 import { ApiError } from "@/lib/apiClient";
 import { uploadToFilestackS3 } from "@/services/filestack";
 import { verifyNin } from "@/services/verification";
+import { getAuthSession, setAuthSession } from "@/state/appState";
 import { showErrorToast, showSuccessToast } from "@/state/toastState";
 
 type IdentityVerificationModalProps = {
@@ -151,6 +152,15 @@ export default function IdentityVerificationModal({
       } else {
         const res = await verifyNin(payload);
         console.log("[Identity] verify-NIN response:", res);
+      }
+
+      // Once documents are submitted, KYC moves to Pending (2) while compliance reviews.
+      const prev = getAuthSession();
+      if (prev) {
+        setAuthSession({
+          ...prev,
+          kycStatus: 2,
+        });
       }
 
       showSuccessToast("Success", "Identity verification submitted");

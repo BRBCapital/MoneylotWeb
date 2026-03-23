@@ -21,7 +21,7 @@ export default function KycGateModal({
   if (!open) return null;
 
   const heading = "Verification Required";
-  const title = "Account verification";
+  const title = "Account Verification";
   const subtitle =
     variant === "rejected"
       ? "Your KYC verification was rejected. Please resubmit your documents to proceed"

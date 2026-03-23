@@ -96,7 +96,7 @@ export type VerifyNinResponse = {
 
 export async function verifyNin(payload: VerifyNinRequest) {
   const res = await apiPostJson<VerifyNinResponse>(
-    "/api/v1/verification/verify-nin",
+    "/api/v1/verification/verify-me",
     {
       nin: (payload.nin || "").trim(),
       ninUrl: payload.ninUrl,

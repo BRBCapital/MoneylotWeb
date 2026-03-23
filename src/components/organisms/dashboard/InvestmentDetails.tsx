@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import Pills from "@/components/ui/Pills";
 import { imagesAndIcons } from "@/constants/imagesAndIcons";
+import KycGateModal from "@/components/modals/KycGateModal";
 import {
   getInvestmentDetail,
   InvestmentDetailDto,
@@ -28,6 +29,7 @@ export default function InvestmentDetails({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [detail, setDetail] = useState<InvestmentDetailDto | null>(null);
+  const [kycOpen, setKycOpen] = useState(false);
 
   useEffect(() => {
     const id = Number(investmentId);
@@ -86,6 +88,35 @@ export default function InvestmentDetails({
   }, [detail?.status, status]);
 
   const isMatured = effectiveStatus === "matured";
+
+  const kycStatus = useMemo(() => {
+    const raw = (detail as any)?.kycStatus;
+    if (typeof raw === "number" && Number.isFinite(raw)) return raw;
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : null;
+  }, [detail]);
+
+  // Enum: 1 New, 2 Pending, 3 Approved, 4 Rejected, 5 Abandoned
+  const isKycApproved = kycStatus === 3;
+  const isKycPending = kycStatus === 2;
+  const isKycRejected = kycStatus === 4;
+  const needsKyc = kycStatus === 1 || kycStatus === 5 || kycStatus == null;
+
+  const kycVariant = isKycRejected ? "rejected" : "required";
+
+  const handleWithdrawClick = (href: string) => {
+    if (isKycApproved) {
+      router.push(href);
+      return;
+    }
+    if (isKycPending) return; // button is disabled, but keep safe-guard
+    // New/Abandoned/Unknown => show modal. Rejected => show rejected modal.
+    if (needsKyc || isKycRejected) {
+      setKycOpen(true);
+      return;
+    }
+    setKycOpen(true);
+  };
 
   const rows: Array<{ label: string; value: React.ReactNode }> = useMemo(() => {
     const d = detail;
@@ -226,11 +257,14 @@ export default function InvestmentDetails({
                 height={40}
                 width={155}
                 fontSize="text-[13px]"
-                backgroundColor="bg-white"
-                textColor="text-[#2E2E2E]"
-                className="border border-[#EEEEEE] rounded-[8px] font-medium"
+                disabled={isKycPending}
+                backgroundColor={isKycPending ? "bg-[#E5E7EB]" : "bg-white"}
+                textColor={isKycPending ? "text-[#9CA3AF]" : "text-[#2E2E2E]"}
+                className={`border rounded-[8px] font-medium ${
+                  isKycPending ? "border-[#D1D5DB]" : "border-[#EEEEEE]"
+                }`}
                 onClick={() =>
-                  router.push(
+                  handleWithdrawClick(
                     `/dashboard/withdrawals/${investmentId}?status=matured`,
                   )
                 }
@@ -254,14 +288,25 @@ export default function InvestmentDetails({
             width={155}
             fontSize="text-[13px]"
             className="rounded-[8px] font-medium"
+            disabled={isKycPending}
             onClick={() =>
-              router.push(
+              handleWithdrawClick(
                 `/dashboard/withdrawals/${investmentId}?status=${effectiveStatus}&early=1`,
               )
             }
           />
         ) : null}
       </div>
+
+      <KycGateModal
+        open={kycOpen}
+        setOpen={setKycOpen}
+        variant={kycVariant}
+        onVerifyIdentity={() => {
+          setKycOpen(false);
+          router.push("/dashboard?verifyKyc=1");
+        }}
+      />
     </div>
   );
 }
