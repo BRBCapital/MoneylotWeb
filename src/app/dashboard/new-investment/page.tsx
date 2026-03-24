@@ -11,7 +11,6 @@ import PaymentDetailsTable from "@/components/organisms/onboarding/PaymentDetail
 import EnterTransactionPinModal from "@/components/modals/EnterTransactionPinModal";
 import { imagesAndIcons } from "@/constants/imagesAndIcons";
 import {
-  applyWithholdingToTotal,
   formatDateLong,
   formatNGN,
   parseMoney,
@@ -247,11 +246,6 @@ export default function NewInvestmentPage() {
           ? amount + expected
           : null;
 
-    const net =
-      expected != null && total != null
-        ? applyWithholdingToTotal({ grossExpected: expected, grossTotal: total })
-        : null;
-
     return [
       ["Investment Type", investmentTypeText || "Fixed Deposit"],
       ["Investment Tenor", tenorText || `${selectedTenorDays} Days`],
@@ -260,14 +254,8 @@ export default function NewInvestmentPage() {
         rateFormattedText || `${(selectedRatePa * 100).toFixed(2)}% p.a`,
       ],
       ["Investment Amount", formatNGN(amount)],
-      [
-        "Expected Returns",
-        net ? formatNGN(net.netExpected) : expected != null ? formatNGN(expected) : "-",
-      ],
-      [
-        "Total at Maturity",
-        net ? formatNGN(net.netTotal) : total != null ? formatNGN(total) : "-",
-      ],
+      ["Expected Returns", expected != null ? formatNGN(expected) : "-"],
+      ["Total at Maturity", total != null ? formatNGN(total) : "-"],
       [
         "Maturity Date",
         maturityDateText?.trim()

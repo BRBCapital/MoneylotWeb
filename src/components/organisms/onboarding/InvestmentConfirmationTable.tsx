@@ -1,7 +1,6 @@
 import React, { useMemo } from "react";
 import {
   addDays,
-  applyWithholdingToTotal,
   computeSimpleInterest,
   formatDateLong,
   formatNGN,
@@ -32,22 +31,18 @@ export default function InvestmentConfirmationTable({
       typeof expectedReturnOverride === "number" && Number.isFinite(expectedReturnOverride)
         ? expectedReturnOverride
         : null;
-    const expectedGross = override ?? base.expectedReturns;
+    const expected = override ?? base.expectedReturns;
 
     const totalOverride =
       typeof totalAtMaturityOverride === "number" && Number.isFinite(totalAtMaturityOverride)
         ? totalAtMaturityOverride
         : null;
 
-    const totalGross = totalOverride ?? amount + expectedGross;
-    const { netExpected, netTotal } = applyWithholdingToTotal({
-      grossExpected: expectedGross,
-      grossTotal: totalGross,
-    });
-
     return {
-      expectedReturns: netExpected,
-      totalAtMaturity: netTotal,
+      // For confirm screens, display exactly what backend provides when overrides exist.
+      // (Backend already applies withholding tax where applicable.)
+      expectedReturns: expected,
+      totalAtMaturity: totalOverride ?? amount + expected,
       maturityDate: addDays(new Date(), tenorDays),
     };
   }, [amount, ratePa, tenorDays, expectedReturnOverride, totalAtMaturityOverride]);
