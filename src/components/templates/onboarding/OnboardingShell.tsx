@@ -2,6 +2,7 @@ import Image from "next/image";
 import React from "react";
 import { imagesAndIcons } from "@/constants/imagesAndIcons";
 import StageDots from "@/components/molecules/onboarding/StageDots";
+import KycStatusPoller from "@/components/auth/KycStatusPoller";
 
 export default function OnboardingShell({
   children,
@@ -16,6 +17,7 @@ export default function OnboardingShell({
 }) {
   return (
     <div className="scale-small-text min-h-screen bg-white overflow-hidden">
+      <KycStatusPoller />
       <div className="min-h-screen flex flex-col">
         {/* Header */}
         <header className="w-full bg-white">

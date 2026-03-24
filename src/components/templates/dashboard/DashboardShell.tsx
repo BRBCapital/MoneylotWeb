@@ -6,6 +6,7 @@ import Sidebar from "@/components/organisms/dashboard/Sidebar";
 import { imagesAndIcons } from "@/constants/imagesAndIcons";
 import { useRouter } from "next/navigation";
 import { getSessionToken } from "@/state/appState";
+import KycStatusPoller from "@/components/auth/KycStatusPoller";
 
 export default function DashboardShell({
   children,
@@ -57,6 +58,7 @@ export default function DashboardShell({
   if (authed === false) return null;
   return (
     <div className="scale-small-text h-screen bg-[#F6F6F6] overflow-hidden">
+      <KycStatusPoller />
       {/* Left Sidebar (fixed, full height) */}
       <div className="fixed inset-y-0 left-0 z-20">
         <Sidebar />

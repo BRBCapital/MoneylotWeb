@@ -7,6 +7,8 @@ import Button from "@/components/ui/Button";
 import Pills from "@/components/ui/Pills";
 import { imagesAndIcons } from "@/constants/imagesAndIcons";
 import KycGateModal from "@/components/modals/KycGateModal";
+import { useAtomValue } from "jotai";
+import { authSessionAtom } from "@/state/appState";
 import {
   getInvestmentDetail,
   InvestmentDetailDto,
@@ -26,6 +28,7 @@ export default function InvestmentDetails({
   status?: InvestmentStatus;
 }) {
   const router = useRouter();
+  const session = useAtomValue(authSessionAtom);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [detail, setDetail] = useState<InvestmentDetailDto | null>(null);
@@ -90,11 +93,11 @@ export default function InvestmentDetails({
   const isMatured = effectiveStatus === "matured";
 
   const kycStatus = useMemo(() => {
-    const raw = (detail as any)?.kycStatus;
+    const raw = (session as any)?.kycStatus ?? (detail as any)?.kycStatus;
     if (typeof raw === "number" && Number.isFinite(raw)) return raw;
     const n = Number(raw);
     return Number.isFinite(n) ? n : null;
-  }, [detail]);
+  }, [detail, session]);
 
   // Enum: 1 New, 2 Pending, 3 Approved, 4 Rejected, 5 Abandoned
   const isKycApproved = kycStatus === 3;
