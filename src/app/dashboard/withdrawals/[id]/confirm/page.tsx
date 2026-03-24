@@ -76,6 +76,19 @@ export default function ConfirmWithdrawalPage() {
     return searchParams.get("early") === "1" || status !== "matured";
   }, [apiData?.isEarlyWithdrawal, searchParams, status]);
 
+  const penaltyPct = useMemo(() => {
+    const raw = (apiData as any)?.penaltyFeePercentage;
+    const n = typeof raw === "number" ? raw : Number(raw);
+    if (!Number.isFinite(n) || n <= 0) return 2.5;
+    // Backend might send 0.025 or 2.5
+    return n > 0 && n <= 1 ? n * 100 : n;
+  }, [apiData]);
+
+  const penaltyPctLabel = useMemo(() => {
+    const s = penaltyPct.toFixed(2).replace(/\.?0+$/, "");
+    return s;
+  }, [penaltyPct]);
+
   const isMatured = useMemo(() => {
     if (typeof apiData?.matured === "boolean") return apiData.matured;
     return status === "matured" && !early;
@@ -137,8 +150,9 @@ export default function ConfirmWithdrawalPage() {
 
   if (early) {
     rows.splice(4, 0, [
-      "Early Withdrawal Fee (2.5%)",
-      apiData?.earlyWithdrawalFeeFormatted || `-${formatNGN(amount * 0.025)}`,
+      `Early Withdrawal Fee (${penaltyPctLabel}%)`,
+      apiData?.earlyWithdrawalFeeFormatted ||
+        `-${formatNGN(amount * (penaltyPct / 100))}`,
       "negative",
     ]);
   }
@@ -186,7 +200,8 @@ export default function ConfirmWithdrawalPage() {
                       Early Withdrawal
                     </p>
                     <p className="mt-0.5 text-[10px] text-[#EB001B]">
-                      This investment has not yet matured. A penalty of 2.5% will be deducted from your payout.
+                      This investment has not yet matured. A penalty of{" "}
+                      {penaltyPctLabel}% will be deducted from your payout.
                     </p>
                   </div>
                 </div>

@@ -29,9 +29,13 @@ export function resolveSetupRoute(session: AuthSession | null): SetupRoute {
   const stage2 = toBool(s.stage2);
   const stage3 = toBool(s.stage3);
   const stage3_5 = toBool(s.stage3_5) || toBool(s.hasPin);
-  const stage4 = toBool(s.stage4);
+  // stage4 is NOT part of "complete your setup" (investment placement step).
+  // Setup is considered complete once the profile/onboarding requirements are done through stage3_5.
+  // const stage4 = toBool(s.stage4);
 
-  const isComplete = !hasAnyStageFlag ? true : stage4 === true;
+  const isComplete = !hasAnyStageFlag
+    ? true
+    : stage1 && stage1_5 && stage2 && stage3 && stage3_5;
 
   let stage: SetupRoute["stage"] = 1;
   let openOtp = false;
@@ -50,7 +54,7 @@ export function resolveSetupRoute(session: AuthSession | null): SetupRoute {
     stage = 3;
     openPin = true;
   } else {
-    stage = 4;
+    stage = 4; // optional investment step; not required for setup completion
   }
 
   const qs = new URLSearchParams();

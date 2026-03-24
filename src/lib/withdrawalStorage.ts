@@ -9,6 +9,7 @@ export type WithdrawalRequestData = Partial<{
   interestAccrued: number;
   interestAccruedFormatted: string;
   isEarlyWithdrawal: boolean;
+  penaltyFeePercentage: number; // e.g. 2.5 (percent) or 0.025 (fraction)
   earlyWithdrawalFee: number;
   earlyWithdrawalFeeFormatted: string;
   netPayout: number;
