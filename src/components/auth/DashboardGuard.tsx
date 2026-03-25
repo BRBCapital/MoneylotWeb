@@ -45,4 +45,3 @@ export default function DashboardGuard({
   if (!authed) return null;
   return <>{children}</>;
 }
-

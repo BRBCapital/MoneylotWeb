@@ -70,4 +70,3 @@ export function resolveSetupRoute(session: AuthSession | null): SetupRoute {
     href: `/get-started?${qs.toString()}`,
   };
 }
-

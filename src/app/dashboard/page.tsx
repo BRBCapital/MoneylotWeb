@@ -21,6 +21,7 @@ import { isAbortError } from "@/lib/isAbortError";
 import { useSearchParams } from "next/navigation";
 import { useAtomValue } from "jotai";
 import { authSessionAtom } from "@/state/appState";
+import { resolveSetupRoute } from "@/lib/setupProgress";
 
 export default function DashboardPage() {
   const [filterOpen, setFilterOpen] = useState(false);
@@ -51,6 +52,12 @@ export default function DashboardPage() {
     if (kycStatus === 4) return "rejected";
     return "new"; // New / Abandoned / unknown
   }, [kycStatus]);
+
+  const isSetupComplete = useMemo(() => {
+    // Hide KYC banner until setup is completed.
+    if (!session) return false;
+    return resolveSetupRoute(session).isComplete;
+  }, [session]);
 
   const [loading, setLoading] = useState(false);
   const [listLoading, setListLoading] = useState(false);
@@ -345,7 +352,7 @@ export default function DashboardPage() {
       <DashboardHeader />
 
       {/* KYC status */}
-      {kycVariant !== "none" ? (
+      {isSetupComplete && kycVariant !== "none" ? (
         <div
           className={`mt-4 mb-6 flex items-center justify-between gap-4 px-4 py-3 border-l-[3px] ${
             kycVariant === "rejected"
