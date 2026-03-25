@@ -433,7 +433,9 @@ export default function SettingsPage() {
                 title="Visit our Website"
                 subtitle="www.moneylot.com"
                 iconSrc={imagesAndIcons.website}
-                onClick={() => console.log("Website clicked")}
+                onClick={() => {
+                  window.open("https://moneylot.com", "_blank", "noopener,noreferrer");
+                }}
               />
             </div>
           </div>
