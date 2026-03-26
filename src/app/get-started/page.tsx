@@ -1974,6 +1974,7 @@ export default function GetStartedPage() {
                   expectedReturn,
                   typeId: selectedTypeId,
                   tenorId: selectedTenorId,
+                  transactionPin: pin,
                   acknowledge: true,
                 });
                 console.log("[Stage 5] webinvestment/create response:", res);

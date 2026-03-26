@@ -888,6 +888,7 @@ export default function NewInvestmentPage() {
                   expectedReturn,
                   typeId: selectedTypeId,
                   tenorId: selectedTenorId,
+                  transactionPin: pin,
                   acknowledge: true,
                 });
                 console.log(

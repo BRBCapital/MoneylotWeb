@@ -189,6 +189,7 @@ export type CreateInvestmentRequest = {
   expectedReturn: number;
   typeId: number;
   tenorId: number;
+  transactionPin: string;
   acknowledge: boolean;
 };
 
