@@ -28,7 +28,11 @@ import { accountCreationWeb } from "@/services/signup";
 import { ApiError } from "@/lib/apiClient";
 import { checkPasswordValidity } from "@/lib/password";
 import { getAccountTypes } from "@/services/account";
-import { securityLogin, verifyEmailAddress } from "@/services/auth";
+import {
+  securityLogin,
+  signupCallbackVerifyOtp,
+  verifyEmailAddress,
+} from "@/services/auth";
 import { webGenerateOtp, webValidateOtp } from "@/services/otp";
 import {
   createInvestment,
@@ -994,14 +998,9 @@ export default function GetStartedPage() {
         return;
       }
 
-      const userId = res?.data?.userId;
-      const accountId = res?.data?.accountId;
-      if (!userId || !accountId) {
-        return setStage1Error("Invalid signup response. Please try again.");
-      }
       setStage1SignupContext({
-        userId,
-        accountId,
+        userId: typeof (res as any)?.data?.userId === "number" ? (res as any).data.userId : null,
+        accountId: typeof (res as any)?.data?.accountId === "number" ? (res as any).data.accountId : null,
         emailAddress: email.trim(),
         password,
         firstName: firstName.trim(),
@@ -1831,11 +1830,24 @@ export default function GetStartedPage() {
                 Boolean(stage1SignupContext.password);
 
               if (authMode) {
-                const otpRes = await webValidateOtp(
-                  stage1SignupContext.userId,
-                  otp,
-                );
-                console.log("[Stage 1] otp/web-validate-otp response:", otpRes);
+                const emailForOtp = (stage1SignupContext.emailAddress || "").trim();
+                try {
+                  const otpRes = await signupCallbackVerifyOtp(otp, emailForOtp);
+                  console.log(
+                    "[Stage 1] auth/signup-callback response:",
+                    otpRes,
+                  );
+                } catch (e) {
+                  // Fallback for older backend behavior (or when callback endpoint is down).
+                  const otpRes = await webValidateOtp(
+                    stage1SignupContext.userId,
+                    otp,
+                  );
+                  console.log(
+                    "[Stage 1] otp/web-validate-otp response:",
+                    otpRes,
+                  );
+                }
 
                 // Login in the background with Stage 1 credentials.
                 const loginRes = await securityLogin({
@@ -1882,8 +1894,20 @@ export default function GetStartedPage() {
                 if (!ses?.userId) {
                   throw new Error("Missing user session. Please login again.");
                 }
-                const otpRes = await webValidateOtp(ses.userId, otp);
-                console.log("[Stage 1] otp/web-validate-otp response:", otpRes);
+                const emailForOtp = (getUserEmail() || email || "").trim();
+                if (emailForOtp) {
+                  const otpRes = await signupCallbackVerifyOtp(otp, emailForOtp);
+                  console.log(
+                    "[Stage 1] auth/signup-callback response:",
+                    otpRes,
+                  );
+                } else {
+                  const otpRes = await webValidateOtp(ses.userId, otp);
+                  console.log(
+                    "[Stage 1] otp/web-validate-otp response:",
+                    otpRes,
+                  );
+                }
                 setAuthSession({
                   ...ses,
                   stage1: true,

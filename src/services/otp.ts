@@ -32,8 +32,14 @@ export type WebGenerateOtpResponse = {
   data?: string | null;
 };
 
-const inflightWebGenerateOtp = new Map<string, Promise<WebGenerateOtpResponse>>();
-const cooldownWebGenerateOtp = new Map<string, { at: number; res: WebGenerateOtpResponse }>();
+const inflightWebGenerateOtp = new Map<
+  string,
+  Promise<WebGenerateOtpResponse>
+>();
+const cooldownWebGenerateOtp = new Map<
+  string,
+  { at: number; res: WebGenerateOtpResponse }
+>();
 
 export async function webGenerateOtp(email: string, otpType?: number) {
   const normalizedEmail = (email || "").trim();
@@ -101,7 +107,9 @@ export async function webValidateOtp(
   // v2 has been observed returning HTTP 200 + message:"Success" even when status/data are false.
   // Treat as success when there's no error and statusCode/message indicate success.
   const msg =
-    typeof (res as any)?.message === "string" ? String((res as any).message).trim() : "";
+    typeof (res as any)?.message === "string"
+      ? String((res as any).message).trim()
+      : "";
   const ok =
     Boolean((res as any)?.status) ||
     Boolean((res as any)?.data) ||

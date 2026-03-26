@@ -38,7 +38,9 @@ export type AuthTokenData = {
 export type AuthTokenResponse = {
   status: boolean;
   message: string;
-  data: AuthTokenData;
+  data?: AuthTokenData | null;
+  statusCode?: number;
+  error?: unknown;
 };
 
 export async function accountCreationWeb(payload: AccountCreationWebRequest) {

@@ -1,4 +1,4 @@
-import { apiPostJson, ApiError } from "@/lib/apiClient";
+import { apiGetJson, apiPostJson, ApiError } from "@/lib/apiClient";
 import type { AuthTokenResponse } from "@/services/signup";
 
 export type ValidateOtpRequest = {
@@ -20,6 +20,37 @@ export async function securityLogin(payload: LoginRequest) {
   return await apiPostJson<AuthTokenResponse>("/api/v1/auth/login", payload, {
     headers: { Authorization: "" },
   });
+}
+
+export type SignupCallbackResponse = {
+  status?: boolean;
+  message?: string | null;
+  data?: unknown;
+  statusCode?: number;
+  error?: unknown;
+};
+
+// Stage 1_5: verify signup email OTP via callback URL.
+// Example: /api/v1/auth/signup-callback/128919/martineikore%40gmail.com
+export async function signupCallbackVerifyOtp(otp: string, emailAddress: string) {
+  const otpSafe = encodeURIComponent(String(otp || "").trim());
+  const emailSafe = encodeURIComponent(String(emailAddress || "").trim());
+  if (!otpSafe) throw new Error("OTP is required");
+  if (!emailSafe) throw new Error("Email is required");
+
+  const res = await apiGetJson<SignupCallbackResponse>(
+    `/api/v1/auth/signup-callback/${otpSafe}/${emailSafe}`,
+    { headers: { Authorization: "" } },
+  );
+  const ok = Boolean((res as any)?.status) || Number((res as any)?.statusCode) === 200;
+  if (!ok) {
+    throw new Error(
+      (typeof (res as any)?.message === "string" && String((res as any).message).trim())
+        ? String((res as any).message).trim()
+        : "Invalid OTP",
+    );
+  }
+  return res;
 }
 
 export type VerifyEmailAddressRequest = {
