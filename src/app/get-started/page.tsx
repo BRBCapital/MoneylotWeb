@@ -57,6 +57,7 @@ import {
 } from "@/state/appState";
 import { showErrorToast, showSuccessToast } from "@/state/toastState";
 import { formatNGN, parseMoney } from "@/lib/investment";
+import { clearPendingSetupRoute } from "@/lib/pendingSetup";
 import {
   fundInvestment,
   FundInvestmentCheckoutData,
@@ -1247,6 +1248,13 @@ export default function GetStartedPage() {
         "Success",
         res?.message || "Identity verified successfully",
       );
+      const ses = getAuthSession();
+      if (ses) {
+        setAuthSession({
+          ...ses,
+          stage2: true,
+        });
+      }
       setStage(3);
       // Clear Stage 2 inputs after successful submission.
       clearStage2Form();
@@ -1327,6 +1335,13 @@ export default function GetStartedPage() {
         "Success",
         res?.message || "Bank details saved successfully",
       );
+      const ses = getAuthSession();
+      if (ses) {
+        setAuthSession({
+          ...ses,
+          stage3: true,
+        });
+      }
       setPinOpen(true);
       // Clear Stage 3 inputs after successful submission.
       clearStage3Form();
@@ -1937,6 +1952,14 @@ export default function GetStartedPage() {
           open={pinOpen}
           setOpen={setPinOpen}
           onVerified={() => {
+            const ses = getAuthSession();
+            if (ses) {
+              setAuthSession({
+                ...ses,
+                stage3_5: true,
+              });
+            }
+            clearPendingSetupRoute();
             setStage(4);
           }}
         />
