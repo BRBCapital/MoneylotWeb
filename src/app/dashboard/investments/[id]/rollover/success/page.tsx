@@ -10,7 +10,9 @@ export default function RolloverSuccessPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const searchParams = useSearchParams();
-  const amount = searchParams.get("amount") || "500,000.00";
+  const amount = (searchParams.get("amount") || "").trim();
+  const hideSubtext = searchParams.get("hideSubtext") === "1";
+  const showSubtext = !hideSubtext && amount !== "" && Number(amount) > 0;
 
   return (
     <OnboardingShell stage={4} totalStages={4} showProgress={false}>
@@ -33,9 +35,12 @@ export default function RolloverSuccessPage() {
             <h1 className="mt-5 text-[14px] font-semibold text-[#2E2E2E]">
               Investment Rolled Over Successfully
             </h1>
-            <p className="mt-1 text-[10px] text-[#5F6368]">
-              ₦{amount} not rolled over will be credited to your bank account shortly
-            </p>
+            {showSubtext ? (
+              <p className="mt-1 text-[10px] text-[#5F6368]">
+                ₦{amount} not rolled over will be credited to your bank account
+                shortly
+              </p>
+            ) : null}
 
             <div className="mt-6 flex justify-center">
               <Button.SmPrimary

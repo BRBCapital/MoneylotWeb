@@ -169,19 +169,13 @@ export default function RolloverConfirmPage() {
                 ? remainingBalanceRaw
                 : Number(remainingBalanceRaw);
 
-            // If there's no leftover balance, skip the success screen entirely.
-            if (!Number.isFinite(remainingBalance) || remainingBalance <= 0) {
-              showSuccessToast(
-                "Success",
-                res?.message || "Investment rolled over",
-              );
-              router.push("/dashboard");
-              return;
-            }
-
             showSuccessToast("Success", res?.message || "Investment rolled over");
             const q = new URLSearchParams();
-            q.set("amount", String(remainingBalance.toFixed(2)));
+            if (Number.isFinite(remainingBalance) && remainingBalance > 0) {
+              q.set("amount", String(remainingBalance.toFixed(2)));
+            } else {
+              q.set("hideSubtext", "1");
+            }
             if (typeof res?.message === "string") q.set("ref", res.message);
             router.push(
               `/dashboard/investments/${params.id}/rollover/success?${q.toString()}`,
