@@ -80,7 +80,12 @@ export type InvestmentReinvestRequest = {
 export type InvestmentReinvestResponse = {
   status: boolean;
   message: string;
-  data?: unknown;
+  data?:
+    | {
+        id?: number;
+        remainingBalance?: number;
+      }
+    | unknown;
 };
 
 export async function reinvestInvestment(payload: InvestmentReinvestRequest) {

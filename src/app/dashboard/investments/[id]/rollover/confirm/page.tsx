@@ -13,8 +13,8 @@ import { applyWithholdingToTotal } from "@/lib/investment";
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between py-3 border-t border-[#EEEEEE]">
-      <span className="text-[10px] text-[#979797]">{label}</span>
-      <span className="text-[10px] font-semibold text-[#2E2E2E]">{value}</span>
+      <span className="text-[12px] text-[#979797]">{label}</span>
+      <span className="text-[12px] font-semibold text-[#2E2E2E]">{value}</span>
     </div>
   );
 }
@@ -80,10 +80,10 @@ export default function RolloverConfirmPage() {
 
             <div className="mt-5 rounded-[8px] border border-[#EEEEEE] px-4">
               <div className="py-3 flex items-center justify-between">
-                <span className="text-[10px] text-[#979797]">
+                <span className="text-[12px] text-[#979797]">
                   Investment Type
                 </span>
-                <span className="text-[10px] font-semibold text-[#2E2E2E]">
+                <span className="text-[12px] font-semibold text-[#2E2E2E]">
                   Fixed Deposit
                 </span>
               </div>
@@ -163,11 +163,29 @@ export default function RolloverConfirmPage() {
             console.log("[Rollover] investment/reinvest payload:", payload);
             const res = await reinvestInvestment(payload);
             console.log("[Rollover] investment/reinvest response:", res);
+            const remainingBalanceRaw = (res as any)?.data?.remainingBalance;
+            const remainingBalance =
+              typeof remainingBalanceRaw === "number"
+                ? remainingBalanceRaw
+                : Number(remainingBalanceRaw);
+
+            // If there's no leftover balance, skip the success screen entirely.
+            if (!Number.isFinite(remainingBalance) || remainingBalance <= 0) {
+              showSuccessToast(
+                "Success",
+                res?.message || "Investment rolled over",
+              );
+              router.push("/dashboard");
+              return;
+            }
+
             showSuccessToast("Success", res?.message || "Investment rolled over");
             const q = new URLSearchParams();
-            q.set("amount", amountInput);
+            q.set("amount", String(remainingBalance.toFixed(2)));
             if (typeof res?.message === "string") q.set("ref", res.message);
-            router.push(`/dashboard/investments/${params.id}/rollover/success?${q.toString()}`);
+            router.push(
+              `/dashboard/investments/${params.id}/rollover/success?${q.toString()}`,
+            );
           } catch (e) {
             if (e instanceof ApiError) throw new Error(e.message);
             if (e instanceof Error) throw e;

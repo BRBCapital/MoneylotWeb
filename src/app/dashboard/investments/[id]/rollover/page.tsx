@@ -151,17 +151,6 @@ export default function RolloverFundsPage() {
               </button>
             </div>
 
-            <div className="mt-4 rounded-[8px] border border-[#EEEEEE] bg-white px-4 py-3">
-              <div className="flex items-center justify-between text-[10px]">
-                <span className="text-[#979797]">Tenor</span>
-                <span className="font-semibold text-[#2E2E2E]">{tenorLabel}</span>
-              </div>
-              <div className="mt-2 flex items-center justify-between text-[10px]">
-                <span className="text-[#979797]">Rate</span>
-                <span className="font-semibold text-[#2E2E2E]">{rateFormatted}</span>
-              </div>
-            </div>
-
             <div className="mt-8 flex justify-end">
               <Button.SmPrimary
                 label="Continue"
