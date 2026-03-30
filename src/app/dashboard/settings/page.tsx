@@ -421,7 +421,13 @@ export default function SettingsPage() {
                 title="Chat With Us"
                 subtitle="Need help? Our support team is on standby."
                 iconSrc={imagesAndIcons.chatWithUs}
-                onClick={() => console.log("Chat With Us clicked")}
+                onClick={() => {
+                  window.open(
+                    "https://api.whatsapp.com/message/QDIXYL5ZR7GEC1?autoload=1&app_absent=0",
+                    "_blank",
+                    "noopener,noreferrer",
+                  );
+                }}
               />
               <SupportRow
                 title="Email"
