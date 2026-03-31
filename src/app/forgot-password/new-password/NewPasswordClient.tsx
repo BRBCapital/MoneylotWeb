@@ -37,8 +37,11 @@ export default function NewPasswordClient({ email }: { email: string }) {
     password === confirmPassword;
 
   return (
-    <AuthShell logo="moneylotIconOne" stackClassName="-translate-y-[15%]">
-      <AuthCard className="px-8 py-8">
+    <AuthShell
+      logo="moneylotIconOne"
+      stackClassName="gap-6 md:gap-8 -translate-y-6 md:-translate-y-8"
+    >
+      <AuthCard className="px-8 py-6 md:py-8">
         <h1 className="text-[16px] font-semibold text-[#2E2E2E]">
           Create a new password
         </h1>
@@ -46,7 +49,7 @@ export default function NewPasswordClient({ email }: { email: string }) {
           Secure your account by creating a new password
         </p>
 
-        <div className="mt-6 space-y-4">
+        <div className="mt-5 space-y-3 md:mt-6 md:space-y-4">
           <PasswordField
             label="New Password"
             value={password}
