@@ -11,7 +11,7 @@ import { imagesAndIcons } from "@/constants/imagesAndIcons";
 import { securityLogin } from "@/services/auth";
 import { ApiError } from "@/lib/apiClient";
 import { setAuthSession, setUserEmail } from "@/state/appState";
-import { showErrorToast, showSuccessToast } from "@/state/toastState";
+import { showSuccessToast } from "@/state/toastState";
 import { resolveSetupRoute } from "@/lib/setupProgress";
 import { setPendingSetupRoute } from "@/lib/pendingSetup";
 
@@ -200,14 +200,12 @@ export default function LoginPage() {
                         ? `${base} (${attemptsLeft} attempt${attemptsLeft === 1 ? "" : "s"} left)`
                         : base;
                     setError(msg);
-                    showErrorToast("Error", msg);
                     return;
                   }
 
                   const msg =
                     e instanceof Error ? e.message : "Login failed. Please try again.";
                   setError(msg);
-                  showErrorToast("Error", msg);
                 } finally {
                   setIsLoading(false);
                 }
