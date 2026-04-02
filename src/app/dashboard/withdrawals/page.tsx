@@ -26,7 +26,7 @@ function StatusDot({
 }) {
   return (
     <div
-      className="flex items-center gap-1 text-[10px] font-medium"
+      className="flex items-center gap-1 text-[13px] font-medium"
       style={{ color }}
     >
       <span
@@ -40,7 +40,7 @@ function StatusDot({
 
 function MaturedPill() {
   return (
-    <div className="inline-flex items-center gap-1 rounded-full border border-transparent bg-[#1790DF1A] px-2 py-0.5 text-[10px] font-medium text-[#1790DF] group-hover:border-[#1790DF]">
+    <div className="inline-flex items-center gap-1 rounded-full border border-transparent bg-[#1790DF1A] px-2.5 py-1 text-[13px] font-medium text-[#1790DF] group-hover:border-[#1790DF]">
       <span className="h-1.5 w-1.5 rounded-full bg-[#1790DF]" />
       Matured
     </div>
@@ -153,13 +153,13 @@ export default function WithdrawalsSelectPage() {
               ) : null}
 
               {/* Ready for withdrawal */}
-              <p className="mt-5 text-[10px] font-medium text-[#89E081]">
+              <p className="mt-5 text-[13px] font-medium text-[#89E081]">
                 Ready for Withdrawal
               </p>
               <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
                 {ready.length === 0 ? (
                   <div className="md:col-span-2 rounded-[10px] border border-dashed border-[#EEEEEE] bg-white px-4 py-10 text-center">
-                    <p className="text-[11px] font-medium text-[#5F6368]">
+                    <p className="text-[14px] font-medium text-[#5F6368]">
                       No matured investment
                     </p>
                   </div>
@@ -172,11 +172,11 @@ export default function WithdrawalsSelectPage() {
                       className="group rounded-[8px] border border-[#EEEEEE] bg-white px-4 py-3 text-left transition-colors hover:bg-[#FAFAFA]"
                     >
                       <div className="flex items-start justify-between gap-3">
-                        <p className="text-[10px] font-semibold text-[#2E2E2E]">
+                        <p className="text-[13px] font-semibold text-[#2E2E2E]">
                           {i.title}
                         </p>
                         <div className="flex flex-col items-end gap-1">
-                          <span className="text-[10px] font-semibold text-[#5FCE55]">
+                          <span className="text-[13px] font-semibold text-[#5FCE55]">
                             {i.amount}
                           </span>
                           <MaturedPill />
@@ -188,7 +188,7 @@ export default function WithdrawalsSelectPage() {
               </div>
 
               {/* Active investments */}
-              <p className="mt-6 text-[10px] font-medium text-[#2E2E2E]">
+              <p className="mt-6 text-[13px] font-medium text-[#2E2E2E]">
                 Active Investments
               </p>
               <div className="mt-2 space-y-3">
@@ -203,15 +203,15 @@ export default function WithdrawalsSelectPage() {
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="text-[10px] font-semibold text-[#2E2E2E]">
+                        <p className="text-[13px] font-semibold text-[#2E2E2E]">
                           {i.title}
                         </p>
-                        <p className="mt-1 text-[9px] text-[#5F6368]">
+                        <p className="mt-1 text-[12px] text-[#5F6368]">
                           {i.subtitle}
                         </p>
                       </div>
                       <div className="flex flex-col items-end gap-1">
-                        <span className="text-[10px] font-semibold text-[#2E2E2E]">
+                        <span className="text-[13px] font-semibold text-[#2E2E2E]">
                           {i.amount}
                         </span>
                         <StatusDot label="Active" color="#5FCE55" />
@@ -225,7 +225,7 @@ export default function WithdrawalsSelectPage() {
                 <button
                   type="button"
                   onClick={() => router.push("/dashboard")}
-                  className="rounded-[8px] bg-[#F2F2F2] px-6 py-2 text-[11px] font-semibold text-[#2E2E2E] hover:opacity-80"
+                  className="rounded-[8px] bg-[#F2F2F2] px-6 py-2 text-[14px] font-semibold text-[#2E2E2E] hover:opacity-80"
                 >
                   Cancel
                 </button>

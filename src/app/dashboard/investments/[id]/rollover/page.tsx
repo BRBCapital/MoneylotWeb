@@ -118,7 +118,7 @@ export default function RolloverFundsPage() {
           <div className="h-px w-full bg-[#EEEEEE]" />
 
           <div className="px-6 py-7">
-            <h1 className="text-[20px] font-semibold text-[#2E2E2E]">
+            <h1 className="text-[22px] font-semibold text-[#2E2E2E]">
               Rollover Funds
             </h1>
             <p className="mt-3 text-[11px] text-[#5F6368]">

@@ -216,7 +216,7 @@ export default function TransactionsPage() {
                 <button
                   type="button"
                   onClick={() => setFilterOpen((v) => !v)}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-[6px] border border-[#EEEEEE] bg-white hover:bg-[#FAFAFA] transition-colors"
+                  className="inline-flex h-[30px] items-center justify-center gap-2 rounded-[6px] border border-[#EEEEEE] bg-white px-3 leading-none hover:bg-[#FAFAFA] transition-colors"
                 >
                   <Image
                     src={imagesAndIcons.filters}
@@ -225,7 +225,7 @@ export default function TransactionsPage() {
                     height={16}
                     className="h-4 w-4"
                   />
-                  <span className="text-[11px] font-medium text-[#2E2E2E]">
+                  <span className="text-[11px] font-medium leading-none text-[#2E2E2E]">
                     Filter
                   </span>
                 </button>

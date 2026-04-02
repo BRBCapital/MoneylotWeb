@@ -8,7 +8,6 @@ import EnterTransactionPinModal from "@/components/modals/EnterTransactionPinMod
 import { reinvestInvestment } from "@/services/investment";
 import { ApiError } from "@/lib/apiClient";
 import { showSuccessToast } from "@/state/toastState";
-import { applyWithholdingToTotal } from "@/lib/investment";
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
@@ -42,13 +41,6 @@ export default function RolloverConfirmPage() {
   const totalAtMaturity = useMemo(() => toNumber(totalAtMaturityInput), [totalAtMaturityInput]);
   const tenorId = useMemo(() => Number(tenorIdInput) || 0, [tenorIdInput]);
   const fmt = (n: number) => `₦${n.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  const net = useMemo(() => {
-    if (!Number.isFinite(expectedReturn) || !Number.isFinite(totalAtMaturity)) return null;
-    return applyWithholdingToTotal({
-      grossExpected: expectedReturn,
-      grossTotal: totalAtMaturity,
-    });
-  }, [expectedReturn, totalAtMaturity]);
 
   return (
     <OnboardingShell stage={4} totalStages={4} showProgress={false}>
@@ -90,15 +82,12 @@ export default function RolloverConfirmPage() {
               <Row label="Tenor" value={tenorLabel} />
               <Row label="Rate" value={rateFormatted} />
               <Row label="Investment Amount" value={fmt(amount)} />
-              <Row label="Expected Returns" value={fmt(net ? net.netExpected : expectedReturn)} />
-              <Row label="Total at Maturity" value={fmt(net ? net.netTotal : totalAtMaturity)} />
+              <Row label="Expected Returns" value={fmt(expectedReturn)} />
+              <Row label="Total at Maturity" value={fmt(totalAtMaturity)} />
               <Row label="Maturity Date" value={maturityDate} />
-            </div>
 
-            <div className="mt-5 flex items-center gap-3 rounded-[6px] border border-[#89E081] bg-[#5FCE551A] px-4 py-3 text-[10px] leading-[16px] text-[#5F6368]">
-              <div>
-                By proceeding, you confirm that all information provided is
-                accurate and that you accept our{" "}
+              <div className="border-t border-[#EEEEEE] py-3 text-[10px] leading-[16px] text-[#5F6368]">
+                By proceeding, you confirm that all information provided is accurate and that you accept our{" "}
                 <a
                   href="https://moneylot.com/#/terms-of-use"
                   target="_blank"
@@ -116,6 +105,7 @@ export default function RolloverConfirmPage() {
                 >
                   Privacy Policy
                 </a>
+                .
               </div>
             </div>
 

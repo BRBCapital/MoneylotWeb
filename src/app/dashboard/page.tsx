@@ -177,13 +177,36 @@ export default function DashboardPage() {
                 ? "inactive"
                 : "inactive";
 
-        const invType =
+        const invTypeRaw =
           typeof x.investmentType === "string" ? x.investmentType.trim() : "-";
-        const period =
-          typeof x.investmentPeriod === "string"
-            ? x.investmentPeriod.trim()
-            : "";
-        const invLabel = period ? `${invType} (${period})` : invType;
+        const periodRaw =
+          typeof x.investmentPeriod === "string" ? x.investmentPeriod.trim() : "";
+
+        const parsed = (() => {
+          const s = String(invTypeRaw || "").trim();
+          // Split "Short Term Investments (30 days)" -> name="Short Term Investments", days="30 days"
+          const m = s.match(/^(.*?)\s*\(\s*([^)]+?)\s*\)\s*$/);
+          if (m) {
+            const name = (m[1] || "").trim();
+            const days = (m[2] || "").trim();
+            return { name: name || s, days: days || "" };
+          }
+          return { name: s || "-", days: "" };
+        })();
+
+        const daysLabel = (parsed.days || periodRaw || "").trim();
+        const invTypeCell = (
+          <div className="inline-flex items-center">
+            <span className="text-sm font-semibold text-[#2E2E2E]">
+              {parsed.name || "-"}
+            </span>
+            {daysLabel ? (
+              <span className="ml-2 rounded-[6px] bg-[#F8F8F8] px-2 py-1 text-[12px] font-medium leading-none text-[#979797]">
+                {daysLabel}
+              </span>
+            ) : null}
+          </div>
+        );
 
         const currentBalance = normalizeNumber(
           (x as any).outstandingBalance ??
@@ -221,7 +244,7 @@ export default function DashboardPage() {
                 )}`
               : undefined,
           data: [
-            invLabel,
+            invTypeCell,
             formatNGN(currentBalance),
             yieldLabel,
             <Pills
@@ -331,7 +354,7 @@ export default function DashboardPage() {
   }, [activeFilter]);
 
   const tableHeaders = [
-    { text: "Investment Type", type: "text" as const },
+    { text: "Investment Type", type: "component" as const },
     { text: "Current Balance", type: "text" as const },
     { text: "Expected Yield", type: "text" as const },
     { text: "Status", type: "component" as const },
@@ -450,7 +473,7 @@ export default function DashboardPage() {
               <button
                 type="button"
                 onClick={() => setFilterOpen((v) => !v)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-[6px] border border-[#EEEEEE] bg-white hover:bg-[#FAFAFA] transition-colors"
+                className="inline-flex h-[30px] items-center justify-center gap-2 rounded-[6px] border border-[#EEEEEE] bg-white px-3 leading-none hover:bg-[#FAFAFA] transition-colors"
               >
                 <Image
                   src={imagesAndIcons.filters}
@@ -459,7 +482,7 @@ export default function DashboardPage() {
                   height={18}
                   className="w-[18px] h-[18px]"
                 />
-                <span className="text-[11px] font-medium text-[#2E2E2E]">
+                <span className="text-[11px] font-medium leading-none text-[#2E2E2E]">
                   Filter
                 </span>
               </button>

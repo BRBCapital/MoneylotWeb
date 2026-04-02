@@ -46,7 +46,7 @@ export function SmPrimary({
       }}
       className={`${cls} ${className || ""} ${
         disabled
-          ? "bg-[#e2f2ef] cursor-not-allowed"
+          ? "bg-black/10 opacity-60 cursor-not-allowed"
           : loading
             ? "bg-[#89E081]/80 pointer-events-none"
             : "bg-[#89E081] hover:bg-[#89E081]/80"
@@ -93,7 +93,7 @@ export function SmPrimaryDropdown({
         }}
         className={`${cls} ${className || ""} ${
           disabled
-            ? "bg-[#e2f2ef] cursor-not-allowed"
+            ? "bg-black/10 opacity-60 cursor-not-allowed"
             : loading
               ? "bg-[#89E081]/80 pointer-events-none"
               : "bg-[#89E081] hover:bg-[#89E081]/80"
@@ -127,7 +127,7 @@ export function SmSecondary({
 
   const isDisabled = disabled || !!loading;
   const stateClass = disabled
-    ? `${backgroundColor} opacity-60 cursor-not-allowed`
+    ? `bg-black/10 opacity-60 cursor-not-allowed`
     : loading
       ? `${backgroundColor} opacity-80 pointer-events-none cursor-default`
       : `${backgroundColor} hover:opacity-80 cursor-pointer`;
@@ -172,7 +172,7 @@ export function MdPrimary({
       }}
       className={`${cls} ${textColor} ${className || ""} ${
         disabled
-          ? "opacity-60 cursor-not-allowed bg-black/10"
+          ? "bg-black/10 opacity-60 cursor-not-allowed"
           : loading
             ? `${backgroundColor} opacity-80 pointer-events-none`
             : `${backgroundColor} hover:opacity-80`
@@ -203,7 +203,7 @@ export function MdSecondary({
       }}
       className={`${cls} ${className || ""} ${
         disabled
-          ? "bg-[#e2f2ef] cursor-not-allowed"
+          ? "bg-black/10 opacity-60 cursor-not-allowed"
           : loading
             ? "bg-[#f2f0f0] opacity-80 pointer-events-none"
             : "bg-[#f2f0f0] hover:opacity-80"

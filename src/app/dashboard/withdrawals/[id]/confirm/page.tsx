@@ -196,10 +196,10 @@ export default function ConfirmWithdrawalPage() {
                     className="mt-0.5 h-6 w-6 shrink-0"
                   />
                   <div>
-                    <p className="text-[11px] font-semibold text-[#EB001B]">
+                    <p className="text-[14px] font-semibold text-[#EB001B]">
                       Early Withdrawal
                     </p>
-                    <p className="mt-0.5 text-[10px] text-[#EB001B]">
+                    <p className="mt-0.5 text-[13px] text-[#EB001B]">
                       This investment has not yet matured. A penalty of{" "}
                       {penaltyPctLabel}% will be deducted from your payout.
                     </p>
@@ -212,7 +212,7 @@ export default function ConfirmWithdrawalPage() {
               {rows.map(([label, value, tone], idx) => (
                 <div
                   key={label}
-                  className={`flex items-center justify-between px-4 py-3 text-[10px] ${
+                  className={`flex items-center justify-between px-4 py-3 text-[13px] ${
                     idx === 0 ? "" : "border-t border-[#89E081]/20"
                   }`}
                 >
@@ -233,19 +233,37 @@ export default function ConfirmWithdrawalPage() {
             </div>
 
             <div className="mt-4">
-              <label className="block text-[10px] font-medium text-[#2E2E2E]">
+              <label className="block text-[13px] font-medium text-[#2E2E2E]">
                 Reason for Withdrawal (optional)
               </label>
-              <select
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                className="mt-2 w-full h-[42px] rounded-[8px] border border-[#E9E9E9] bg-white px-4 text-[12px] text-[#2E2E2E] outline-none focus:border-[#89E081]"
-              >
-                <option value="">Select a reason</option>
-                <option value="emergency">Emergency</option>
-                <option value="reinvestment">Reinvestment elsewhere</option>
-                <option value="personal">Personal reasons</option>
-              </select>
+              <div className="relative mt-2">
+                <select
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  className="w-full h-[42px] appearance-none rounded-[8px] border border-[#E9E9E9] bg-white px-4 pr-10 text-[16px] text-[#2E2E2E] outline-none focus:border-[#89E081]"
+                >
+                  <option value="">Select a reason</option>
+                  <option value="emergency">Emergency</option>
+                  <option value="reinvestment">Reinvestment elsewhere</option>
+                  <option value="personal">Personal reasons</option>
+                </select>
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  aria-hidden="true"
+                  className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[#5F6368]"
+                >
+                  <path
+                    d="M6 8L10 12L14 8"
+                    stroke="currentColor"
+                    strokeWidth="1.7"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </div>
             </div>
 
             <div className="mt-6 flex justify-end">

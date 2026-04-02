@@ -87,6 +87,13 @@ export default function Pills({ type, text, icon }: PillsProps) {
           <span className="w-2 h-2 bg-[#1790DF] rounded-full" />
           {text}
         </span>
+      ) : ["matured"].includes(t) ? (
+        <span
+          className={`${pillsClassName} text-[#1790DF] bg-[#1790DF1A] px-2.5 py-1 text-[13px] font-medium border border-transparent group-hover:border-[#1790DF]`}
+        >
+          <span className="w-2 h-2 bg-[#1790DF] rounded-full" />
+          {text}
+        </span>
       ) : t === "primary" ? (
         <span
           className={`${pillsClassName} text-[#1790DF] bg-[#1790DF1A] px-2.5 py-1`}
