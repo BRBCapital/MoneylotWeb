@@ -18,11 +18,6 @@ export default function RolloverSuccessPage() {
     <OnboardingShell stage={4} totalStages={4} showProgress={false}>
       <div className="w-full">
         <div className="rounded-[8px] border border-black/10 bg-white shadow-sm overflow-hidden">
-          <div className="px-6 py-4 text-[11px] font-medium text-[#5F6368]">
-            Investment Rollover
-          </div>
-          <div className="h-px w-full bg-[#EEEEEE]" />
-
           <div className="px-6 py-10 text-center">
             <Image
               src={imagesAndIcons.successfulIcon}
@@ -32,7 +27,7 @@ export default function RolloverSuccessPage() {
               className="mx-auto h-[60px] w-[60px]"
             />
 
-            <h1 className="mt-5 text-[14px] font-semibold text-[#2E2E2E]">
+            <h1 className="mt-5 text-[20px] font-semibold text-[#2E2E2E]">
               Investment Rolled Over Successfully
             </h1>
             {showSubtext ? (
