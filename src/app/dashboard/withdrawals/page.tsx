@@ -17,13 +17,7 @@ type InvestmentItem = {
   status: "matured" | "active";
 };
 
-function StatusDot({
-  label,
-  color,
-}: {
-  label: "Matured" | "Active";
-  color: string;
-}) {
+function StatusDot({ label, color }: { label: "Matured"; color: string }) {
   return (
     <div
       className="flex items-center gap-1 text-[13px] font-medium"
@@ -40,9 +34,18 @@ function StatusDot({
 
 function MaturedPill() {
   return (
-    <div className="inline-flex items-center gap-1 rounded-full border border-transparent bg-[#1790DF1A] px-2.5 py-1 text-[13px] font-medium text-[#1790DF] group-hover:border-[#1790DF]">
+    <div className="inline-flex items-center gap-1 rounded-full border border-transparent bg-[#1790DF1A] px-2 py-0.5 text-[11px] font-medium text-[#1790DF] group-hover:border-[#1790DF]">
       <span className="h-1.5 w-1.5 rounded-full bg-[#1790DF]" />
       Matured
+    </div>
+  );
+}
+
+function ActivePill() {
+  return (
+    <div className="inline-flex items-center gap-1 rounded-full bg-[#5FCE551A] px-2 py-0.5 text-[11px] font-medium text-[#5FCE55]">
+      <span className="h-1.5 w-1.5 rounded-full bg-[#5FCE55]" />
+      Active
     </div>
   );
 }
@@ -80,7 +83,7 @@ export default function WithdrawalsSelectPage() {
 
               return {
                 id,
-                title: tenor ? `${investmentType} - ${tenor}` : investmentType,
+                title: tenor ? `${investmentType} • ${tenor}` : investmentType,
                 subtitle: isMatured
                   ? formatNGN(amountNum)
                   : `${elapsed || "In progress"} - Early exit penalty applies`,
@@ -214,7 +217,7 @@ export default function WithdrawalsSelectPage() {
                         <span className="text-[13px] font-semibold text-[#2E2E2E]">
                           {i.amount}
                         </span>
-                        <StatusDot label="Active" color="#5FCE55" />
+                        <ActivePill />
                       </div>
                     </div>
                   </button>
