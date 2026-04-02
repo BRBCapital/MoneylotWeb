@@ -87,32 +87,13 @@ export default function RolloverConfirmPage() {
               <Row label="Expected Returns" value={fmt(expectedReturn)} />
               <Row label="Total at Maturity" value={fmt(totalAtMaturity)} />
               <Row label="Maturity Date" value={maturityDate} />
+            </div>
 
-              <div className="border-t border-[#EEEEEE] py-3">
-                <div className="flex items-center gap-3 rounded-[6px] border border-[#89E081] bg-[#5FCE551A] px-4 py-3 text-[12px] leading-[18px] text-[#2E2E2E]">
-                  <IconCheckbox checked={agreeTerms} onChange={setAgreeTerms} />
-                  <div className="text-[#5F6368]">
-                    By proceeding, I agree to the{" "}
-                    <a
-                      href="https://moneylot.com/#/terms-of-use"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="font-semibold text-[#89E081] hover:opacity-80"
-                    >
-                      Terms of Service
-                    </a>{" "}
-                    and{" "}
-                    <a
-                      href="https://moneylot.com/#/privacy-policy"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="font-semibold text-[#89E081] hover:opacity-80"
-                    >
-                      Privacy Policy
-                    </a>
-                    .
-                  </div>
-                </div>
+            <div className="mt-5 flex items-center gap-3 rounded-[6px] border border-[#89E081] bg-[#5FCE551A] px-4 py-3 text-[14px] leading-[20px] text-[#5F6368]">
+              <IconCheckbox checked={agreeTerms} onChange={setAgreeTerms} />
+              <div>
+                By proceeding, I agree that all returns accrued will be forfeited
+                and a penalty fee incurred if funds are withdrawn before maturity
               </div>
             </div>
 

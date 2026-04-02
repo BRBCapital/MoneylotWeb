@@ -9,14 +9,16 @@ export default function OnboardingShell({
   stage = 1,
   totalStages = 4,
   showProgress = true,
+  pageBgClassName = "bg-white",
 }: {
   children: React.ReactNode;
   stage?: number;
   totalStages?: number;
   showProgress?: boolean;
+  pageBgClassName?: string;
 }) {
   return (
-    <div className="scale-small-text min-h-screen bg-white overflow-hidden">
+    <div className={`scale-small-text min-h-screen ${pageBgClassName} overflow-hidden`}>
       <KycStatusPoller />
       <div className="min-h-screen flex flex-col">
         {/* Header */}

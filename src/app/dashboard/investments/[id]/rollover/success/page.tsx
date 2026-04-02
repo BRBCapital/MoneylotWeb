@@ -15,9 +15,15 @@ export default function RolloverSuccessPage() {
   const showSubtext = !hideSubtext && amount !== "" && Number(amount) > 0;
 
   return (
-    <OnboardingShell stage={4} totalStages={4} showProgress={false}>
+    <OnboardingShell
+      stage={4}
+      totalStages={4}
+      showProgress={false}
+      pageBgClassName="bg-[#EEEEEE]"
+    >
       <div className="w-full">
         <div className="rounded-[8px] border border-black/10 bg-white shadow-sm overflow-hidden">
+          <div className="h-px w-full bg-[#EEEEEE]" />
           <div className="px-6 py-10 text-center">
             <Image
               src={imagesAndIcons.successfulIcon}
@@ -31,7 +37,7 @@ export default function RolloverSuccessPage() {
               Investment Rolled Over Successfully
             </h1>
             {showSubtext ? (
-              <p className="mt-1 text-[10px] text-[#5F6368]">
+              <p className="mt-1 text-[15px] leading-[20px] text-[#5F6368]">
                 ₦{amount} not rolled over will be credited to your bank account
                 shortly
               </p>
@@ -55,4 +61,3 @@ export default function RolloverSuccessPage() {
     </OnboardingShell>
   );
 }
-
