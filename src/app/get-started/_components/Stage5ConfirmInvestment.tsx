@@ -44,14 +44,18 @@ export default function Stage5ConfirmInvestment({
 
       <OnboardingCard
         stepLine={
-          <p className="text-[12px] font-medium text-[#5F6368]">Almost There!</p>
+          <p className="text-[12px] font-medium text-[#5F6368]">
+            Almost There!
+          </p>
         }
         title="Confirm Your Investment"
         footer={
           <div className="flex items-center justify-between gap-4">
             <div className="min-h-[16px]">
               {createInvestmentError ? (
-                <p className="text-[11px] text-[#E53935]">{createInvestmentError}</p>
+                <p className="text-[11px] text-[#E53935]">
+                  {createInvestmentError}
+                </p>
               ) : null}
             </div>
             <Button.SmPrimary
@@ -87,14 +91,16 @@ export default function Stage5ConfirmInvestment({
         )}
 
         <div className="mt-4 flex items-center gap-3 rounded-[6px] border border-[#89E081] bg-[#5FCE551A] px-4 py-3 text-[12px] leading-[18px] text-[#2E2E2E]">
-          <IconCheckbox checked={acknowledgeInvestment} onChange={onAcknowledgeChange} />
+          <IconCheckbox
+            checked={acknowledgeInvestment}
+            onChange={onAcknowledgeChange}
+          />
           <div className="text-[#5F6368]">
-            By proceeding, I agree that all returns accrued will be forfeited and a
-            penalty fee incurred if funds are withdrawn before maturity
+            By proceeding, I agree that all returns accrued will be forfeited
+            and a penalty fee incurred if funds are withdrawn before maturity
           </div>
         </div>
       </OnboardingCard>
     </>
   );
 }
-

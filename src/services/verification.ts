@@ -86,6 +86,8 @@ export async function getIdentityTypes(signal?: AbortSignal) {
 export type VerifyNinRequest = {
   nin: string;
   ninUrl: string;
+  proofOfAddressTypeId?: number | null;
+  proofOfAddressUrl?: string | null;
 };
 
 export type VerifyNinResponse = {
@@ -100,12 +102,62 @@ export async function verifyNin(payload: VerifyNinRequest) {
     {
       nin: (payload.nin || "").trim(),
       ninUrl: payload.ninUrl,
+      ...(typeof payload.proofOfAddressTypeId === "number" &&
+      Number.isFinite(payload.proofOfAddressTypeId)
+        ? { proofOfAddressTypeId: payload.proofOfAddressTypeId }
+        : {}),
+      ...(payload.proofOfAddressUrl
+        ? { proofOfAddressUrl: payload.proofOfAddressUrl }
+        : {}),
     }
   );
   if (!res?.status) {
     throw new Error(res?.message || "Unable to verify NIN. Please try again.");
   }
   return res;
+}
+
+export type ProofOfAddressTypeDto = {
+  id: number;
+  name: string;
+};
+
+type GetProofOfAddressTypesResponse = {
+  status: boolean;
+  message: string;
+  data?: unknown;
+};
+
+function normalizeProofOfAddressType(x: any): ProofOfAddressTypeDto | null {
+  if (!x || typeof x !== "object") return null;
+  const idRaw = (x as any).id ?? (x as any).typeId ?? (x as any).proofOfAddressTypeId;
+  const id = typeof idRaw === "number" ? idRaw : Number(idRaw);
+  const name =
+    (typeof (x as any).name === "string" && (x as any).name.trim()) ||
+    (typeof (x as any).typeName === "string" && (x as any).typeName.trim()) ||
+    (typeof (x as any).proofOfAddressType === "string" && (x as any).proofOfAddressType.trim()) ||
+    "";
+  if (!Number.isFinite(id) || id <= 0) return null;
+  if (!name) return null;
+  return { id, name };
+}
+
+export async function getProofOfAddressTypes(signal?: AbortSignal) {
+  const res = await apiGetJson<GetProofOfAddressTypesResponse>(
+    "/api/v1/verification/proof-of-address-types",
+    { signal },
+  );
+  if (!res?.status) {
+    throw new Error(
+      res?.message || "Unable to load proof of address types. Please try again.",
+    );
+  }
+  const root: any = res.data;
+  const listRaw = Array.isArray(root) ? root : Array.isArray(root?.data) ? root.data : [];
+  const list = listRaw
+    .map(normalizeProofOfAddressType)
+    .filter(Boolean) as ProofOfAddressTypeDto[];
+  return { status: true, message: res.message, data: list };
 }
 
 export type VerifyNinOnlyRequest = {

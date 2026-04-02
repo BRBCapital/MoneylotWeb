@@ -10,11 +10,7 @@ import InvestmentSummary from "@/components/organisms/onboarding/InvestmentSumma
 import PaymentDetailsTable from "@/components/organisms/onboarding/PaymentDetailsTable";
 import EnterTransactionPinModal from "@/components/modals/EnterTransactionPinModal";
 import { imagesAndIcons } from "@/constants/imagesAndIcons";
-import {
-  formatDateLong,
-  formatNGN,
-  parseMoney,
-} from "@/lib/investment";
+import { formatDateLong, formatNGN, parseMoney } from "@/lib/investment";
 import { ApiError } from "@/lib/apiClient";
 import {
   createInvestment,
@@ -127,6 +123,7 @@ export default function NewInvestmentPage() {
   const [step, setStep] = useState<Step>(1);
   const [pinOpen, setPinOpen] = useState(false);
   const [transactionPin, setTransactionPin] = useState("");
+  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
   const [createdInvestmentId, setCreatedInvestmentId] = useState<number | null>(
     null,
   );
@@ -217,6 +214,11 @@ export default function NewInvestmentPage() {
   );
   const [tenorText, setTenorText] = useState<string | null>(null);
   const [acknowledge, setAcknowledge] = useState(false);
+
+  useEffect(() => {
+    if (step !== 3) return;
+    setPaymentConfirmed(false);
+  }, [step]);
 
   const amount = useMemo(
     () => parseMoney(effectiveAmountInput),
@@ -794,21 +796,31 @@ export default function NewInvestmentPage() {
               accountName={checkout?.accountName || "-"}
             />
 
-            <p className="mt-4 text-center text-[11px] text-[#5F6368]">
-              Account number provided expires after{" "}
-              <span className="font-semibold text-[#2E2E2E]">
-                {expiryCountdown.formatted} mins
-              </span>
-            </p>
-            <p className="mt-1 text-center text-[11px] text-[#5F6368]">
-              Transfer only{" "}
-              <span className="font-semibold text-[#2E2E2E]">
-                {formatNGN(
-                  parseMoney(confirmedAmountInput ?? investmentAmount) + 50,
-                )}
-              </span>{" "}
-              to the account number above within the validity time
-            </p>
+            <div className="mt-4 rounded-[6px] bg-[#89E0811A] px-4 py-3 text-center text-[11px] leading-[16px] text-[#5F6368]">
+              <p>
+                Account number provided expires in{" "}
+                <span className="font-semibold text-[#5ECF53]">
+                  {expiryCountdown.formatted}
+                </span>
+              </p>
+              <p className="mt-1">
+                Transfer only{" "}
+                <span className="font-semibold text-[#2E2E2E]">
+                  {formatNGN(
+                    parseMoney(confirmedAmountInput ?? investmentAmount) + 50,
+                  )}
+                </span>{" "}
+                to the account number above within the validity time.
+              </p>
+            </div>
+
+            <div className="mt-4 flex items-center gap-3 rounded-[6px] border border-[#89E081] bg-[#89E0811A] px-4 py-3 text-[12px] leading-[18px] text-[#5F6368]">
+              <IconCheckbox
+                checked={paymentConfirmed}
+                onChange={(next) => setPaymentConfirmed(next)}
+              />
+              <div>I confirm I have made this payment.</div>
+            </div>
 
             <div className="mt-5 flex justify-center">
               <Button.SmPrimary
@@ -818,7 +830,7 @@ export default function NewInvestmentPage() {
                 fontSize="text-[11px]"
                 className="rounded-[8px] font-medium"
                 loading={fundingLoading ? "Please wait" : undefined}
-                disabled={fundingLoading}
+                disabled={fundingLoading || !paymentConfirmed}
                 onClick={() => setStep(4)}
               />
             </div>

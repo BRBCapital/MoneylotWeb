@@ -39,10 +39,17 @@ export default function RolloverConfirmPage() {
   };
 
   const amount = useMemo(() => toNumber(amountInput), [amountInput]);
-  const expectedReturn = useMemo(() => toNumber(expectedReturnInput), [expectedReturnInput]);
-  const totalAtMaturity = useMemo(() => toNumber(totalAtMaturityInput), [totalAtMaturityInput]);
+  const expectedReturn = useMemo(
+    () => toNumber(expectedReturnInput),
+    [expectedReturnInput],
+  );
+  const totalAtMaturity = useMemo(
+    () => toNumber(totalAtMaturityInput),
+    [totalAtMaturityInput],
+  );
   const tenorId = useMemo(() => Number(tenorIdInput) || 0, [tenorIdInput]);
-  const fmt = (n: number) => `₦${n.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const fmt = (n: number) =>
+    `₦${n.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   return (
     <OnboardingShell stage={4} totalStages={4} showProgress={false}>
@@ -92,8 +99,9 @@ export default function RolloverConfirmPage() {
             <div className="mt-5 flex items-center gap-3 rounded-[6px] border border-[#89E081] bg-[#5FCE551A] px-4 py-3 text-[14px] leading-[20px] text-[#5F6368]">
               <IconCheckbox checked={agreeTerms} onChange={setAgreeTerms} />
               <div>
-                By proceeding, I agree that all returns accrued will be forfeited
-                and a penalty fee incurred if funds are withdrawn before maturity
+                By proceeding, I agree that all returns accrued will be
+                forfeited and a penalty fee incurred if funds are withdrawn
+                before maturity
               </div>
             </div>
 
@@ -148,7 +156,10 @@ export default function RolloverConfirmPage() {
                 ? remainingBalanceRaw
                 : Number(remainingBalanceRaw);
 
-            showSuccessToast("Success", res?.message || "Investment rolled over");
+            showSuccessToast(
+              "Success",
+              res?.message || "Investment rolled over",
+            );
             const q = new URLSearchParams();
             if (Number.isFinite(remainingBalance) && remainingBalance > 0) {
               q.set("amount", String(remainingBalance.toFixed(2)));

@@ -71,15 +71,17 @@ export default function Stage6Payment({
 
         <p className="mt-4 text-center text-[11px] text-[#5F6368]">
           Account number provided expires after{" "}
-          <span className="font-medium text-[#2E2E2E]">{expiryFormatted} mins</span>
+          <span className="font-medium text-[#2E2E2E]">
+            {expiryFormatted} mins
+          </span>
         </p>
 
         <p className="mt-2 text-center text-[11px] text-[#2E2E2E]">
-          Transfer only <span className="font-semibold">{totalToTransferFormatted}</span>{" "}
-          to the account number above within the validity time.
+          Transfer only{" "}
+          <span className="font-semibold">{totalToTransferFormatted}</span> to
+          the account number above within the validity time.
         </p>
       </OnboardingCard>
     </>
   );
 }
-
