@@ -761,6 +761,7 @@ export default function NewInvestmentPage() {
                 width={170}
                 fontSize="text-[11px]"
                 className="rounded-[8px] font-medium"
+                disabled={!acknowledge}
                 onClick={() => {
                   if (
                     !confirmedAmountInput?.trim() ||

@@ -17,26 +17,35 @@ function normalizeCountry(x: RawCountry): CountryDto | null {
   if (!x || typeof x !== "object") return null;
   const name =
     (typeof x.name === "string" && x.name.trim()) ||
-    (typeof (x as any).countryName === "string" && (x as any).countryName.trim()) ||
+    (typeof (x as any).countryName === "string" &&
+      (x as any).countryName.trim()) ||
     (typeof (x as any).country === "string" && (x as any).country.trim()) ||
     "";
   const code =
     (typeof (x as any).code === "string" && (x as any).code.trim()) ||
     (typeof (x as any).iso2 === "string" && (x as any).iso2.trim()) ||
-    (typeof (x as any).countryCode === "string" && (x as any).countryCode.trim()) ||
+    (typeof (x as any).countryCode === "string" &&
+      (x as any).countryCode.trim()) ||
     name;
   if (!name) return null;
   return { name, code };
 }
 
 export async function getCountries(signal?: AbortSignal) {
-  const res = await apiGetJson<GetCountryResponse>("/api/v1/verification/get-country", {
-    signal,
-  });
+  const res = await apiGetJson<GetCountryResponse>(
+    "/api/v1/verification/get-country",
+    {
+      signal,
+    },
+  );
   if (!res?.status) {
-    throw new Error(res?.message || "Unable to load countries. Please try again.");
+    throw new Error(
+      res?.message || "Unable to load countries. Please try again.",
+    );
   }
-  const list = Array.isArray(res.data) ? res.data.map(normalizeCountry).filter(Boolean) : [];
+  const list = Array.isArray(res.data)
+    ? res.data.map(normalizeCountry).filter(Boolean)
+    : [];
   return {
     status: res.status,
     message: res.message,
@@ -62,7 +71,8 @@ function normalizeIdentityType(x: any): IdentityTypeDto | null {
   const name =
     (typeof (x as any).name === "string" && (x as any).name.trim()) ||
     (typeof (x as any).typeName === "string" && (x as any).typeName.trim()) ||
-    (typeof (x as any).identityType === "string" && (x as any).identityType.trim()) ||
+    (typeof (x as any).identityType === "string" &&
+      (x as any).identityType.trim()) ||
     "";
   if (!Number.isFinite(id) || id <= 0) return null;
   if (!name) return null;
@@ -72,14 +82,22 @@ function normalizeIdentityType(x: any): IdentityTypeDto | null {
 export async function getIdentityTypes(signal?: AbortSignal) {
   const res = await apiGetJson<GetIdentityTypeResponse>(
     "/api/v1/verification/get-identity-type",
-    { signal }
+    { signal },
   );
   if (!res?.status) {
-    throw new Error(res?.message || "Unable to load identity types. Please try again.");
+    throw new Error(
+      res?.message || "Unable to load identity types. Please try again.",
+    );
   }
   const root: any = res.data;
-  const listRaw = Array.isArray(root) ? root : Array.isArray(root?.data) ? root.data : [];
-  const list = listRaw.map(normalizeIdentityType).filter(Boolean) as IdentityTypeDto[];
+  const listRaw = Array.isArray(root)
+    ? root
+    : Array.isArray(root?.data)
+      ? root.data
+      : [];
+  const list = listRaw
+    .map(normalizeIdentityType)
+    .filter(Boolean) as IdentityTypeDto[];
   return { status: true, message: res.message, data: list };
 }
 
@@ -109,7 +127,7 @@ export async function verifyNin(payload: VerifyNinRequest) {
       ...(payload.proofOfAddressUrl
         ? { proofOfAddressUrl: payload.proofOfAddressUrl }
         : {}),
-    }
+    },
   );
   if (!res?.status) {
     throw new Error(res?.message || "Unable to verify NIN. Please try again.");
@@ -130,12 +148,14 @@ type GetProofOfAddressTypesResponse = {
 
 function normalizeProofOfAddressType(x: any): ProofOfAddressTypeDto | null {
   if (!x || typeof x !== "object") return null;
-  const idRaw = (x as any).id ?? (x as any).typeId ?? (x as any).proofOfAddressTypeId;
+  const idRaw =
+    (x as any).id ?? (x as any).typeId ?? (x as any).proofOfAddressTypeId;
   const id = typeof idRaw === "number" ? idRaw : Number(idRaw);
   const name =
     (typeof (x as any).name === "string" && (x as any).name.trim()) ||
     (typeof (x as any).typeName === "string" && (x as any).typeName.trim()) ||
-    (typeof (x as any).proofOfAddressType === "string" && (x as any).proofOfAddressType.trim()) ||
+    (typeof (x as any).proofOfAddressType === "string" &&
+      (x as any).proofOfAddressType.trim()) ||
     "";
   if (!Number.isFinite(id) || id <= 0) return null;
   if (!name) return null;
@@ -149,11 +169,16 @@ export async function getProofOfAddressTypes(signal?: AbortSignal) {
   );
   if (!res?.status) {
     throw new Error(
-      res?.message || "Unable to load proof of address types. Please try again.",
+      res?.message ||
+        "Unable to load proof of address types. Please try again.",
     );
   }
   const root: any = res.data;
-  const listRaw = Array.isArray(root) ? root : Array.isArray(root?.data) ? root.data : [];
+  const listRaw = Array.isArray(root)
+    ? root
+    : Array.isArray(root?.data)
+      ? root.data
+      : [];
   const list = listRaw
     .map(normalizeProofOfAddressType)
     .filter(Boolean) as ProofOfAddressTypeDto[];
@@ -175,16 +200,15 @@ export type VerifyNinOnlyResponse = {
 export async function verifyNinOnly(payload: VerifyNinOnlyRequest) {
   const res = await apiPostJson<VerifyNinOnlyResponse>(
     "/api/v1/verification/verify-NIN",
-    { nin: (payload.nin || "").trim() }
+    { nin: (payload.nin || "").trim() },
   );
   const ok = Boolean(res?.status) || res?.statusCode === 200;
   if (!ok) {
     throw new Error(
-      (typeof res?.message === "string" && res.message.trim())
+      typeof res?.message === "string" && res.message.trim()
         ? res.message
-        : "Unable to verify NIN. Please try again."
+        : "Unable to verify NIN. Please try again.",
     );
   }
   return res;
 }
-

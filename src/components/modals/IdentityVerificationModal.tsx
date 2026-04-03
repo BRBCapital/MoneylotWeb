@@ -39,14 +39,20 @@ export default function IdentityVerificationModal({
   const [addressTypes, setAddressTypes] = useState<ProofOfAddressTypeDto[]>([]);
   const [addressTypeId, setAddressTypeId] = useState<number | null>(null);
   const [addressTypesLoading, setAddressTypesLoading] = useState(false);
-  const [addressTypesError, setAddressTypesError] = useState<string | null>(null);
+  const [addressTypesError, setAddressTypesError] = useState<string | null>(
+    null,
+  );
 
   const [addressFile, setAddressFile] = useState<File | null>(null);
   const [addressDragActive, setAddressDragActive] = useState(false);
   const addressFileInputRef = useRef<HTMLInputElement>(null);
   const [addressUploading, setAddressUploading] = useState(false);
-  const [addressUploadError, setAddressUploadError] = useState<string | null>(null);
-  const [addressUploadedUrl, setAddressUploadedUrl] = useState<string | null>(null);
+  const [addressUploadError, setAddressUploadError] = useState<string | null>(
+    null,
+  );
+  const [addressUploadedUrl, setAddressUploadedUrl] = useState<string | null>(
+    null,
+  );
   const addressUploadSeqRef = useRef(0);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -104,7 +110,8 @@ export default function IdentityVerificationModal({
       if (addressUploadSeqRef.current !== seq) return;
       if (e instanceof ApiError) setAddressUploadError(e.message);
       else if (e instanceof Error) setAddressUploadError(e.message);
-      else setAddressUploadError("Unable to upload document. Please try again.");
+      else
+        setAddressUploadError("Unable to upload document. Please try again.");
     } finally {
       if (addressUploadSeqRef.current === seq) setAddressUploading(false);
     }
@@ -179,7 +186,12 @@ export default function IdentityVerificationModal({
   };
 
   const isValidFileType = (file: File): boolean => {
-    const validTypes = ["application/pdf", "image/jpeg", "image/jpg", "image/png"];
+    const validTypes = [
+      "application/pdf",
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+    ];
     return validTypes.includes(file.type);
   };
 
@@ -326,7 +338,12 @@ export default function IdentityVerificationModal({
   }, [open]);
 
   return (
-    <Modal open={open} setClose={setOpen} position="center" contentClassName="p-0">
+    <Modal
+      open={open}
+      setClose={setOpen}
+      position="center"
+      contentClassName="p-0"
+    >
       <div className="w-[92vw] max-w-[550px] bg-white rounded-[10px] p-4">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
@@ -394,11 +411,17 @@ export default function IdentityVerificationModal({
                         {(selectedFile.size / 1024).toFixed(2)} KB
                       </p>
                       {uploading ? (
-                        <p className="mt-1 text-[10px] text-[#5F6368]">Uploading...</p>
+                        <p className="mt-1 text-[10px] text-[#5F6368]">
+                          Uploading...
+                        </p>
                       ) : uploadedUrl ? (
-                        <p className="mt-1 text-[10px] text-[#2E2E2E]">Uploaded</p>
+                        <p className="mt-1 text-[10px] text-[#2E2E2E]">
+                          Uploaded
+                        </p>
                       ) : uploadError ? (
-                        <p className="mt-1 text-[10px] text-[#E53935]">{uploadError}</p>
+                        <p className="mt-1 text-[10px] text-[#E53935]">
+                          {uploadError}
+                        </p>
                       ) : null}
                     </div>
                   </div>
@@ -486,7 +509,9 @@ export default function IdentityVerificationModal({
               ))}
             </select>
             {addressTypesError ? (
-              <p className="mt-1 text-[11px] text-[#E53935]">{addressTypesError}</p>
+              <p className="mt-1 text-[11px] text-[#E53935]">
+                {addressTypesError}
+              </p>
             ) : null}
           </div>
 

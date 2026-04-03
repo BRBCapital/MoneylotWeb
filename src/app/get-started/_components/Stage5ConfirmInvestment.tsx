@@ -64,7 +64,7 @@ export default function Stage5ConfirmInvestment({
               height={38}
               fontSize="text-[12px]"
               loading={createInvestmentLoading ? "Please wait" : undefined}
-              disabled={createInvestmentLoading}
+              disabled={createInvestmentLoading || !acknowledgeInvestment}
               onClick={() => void onProceedToPayment()}
             />
           </div>
