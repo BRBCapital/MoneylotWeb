@@ -35,6 +35,7 @@ export default function Stage1AccountCreation({
   password,
   confirmPassword,
   acceptedTerms,
+  canSubmit,
   stage1Error,
   stage1Loading,
   stage1FieldErrors,
@@ -63,6 +64,7 @@ export default function Stage1AccountCreation({
   password: string;
   confirmPassword: string;
   acceptedTerms: boolean;
+  canSubmit: boolean;
   stage1Error: string | null;
   stage1Loading: boolean;
   stage1FieldErrors: Stage1FieldErrors;
@@ -112,7 +114,7 @@ export default function Stage1AccountCreation({
               width={160}
               height={38}
               loading={stage1Loading ? "Please wait" : undefined}
-              disabled={stage1Loading}
+              disabled={stage1Loading || !canSubmit}
               onClick={() => void onContinue()}
             />
           </div>

@@ -1679,6 +1679,7 @@ export default function GetStartedPage() {
             password={password}
             confirmPassword={confirmPassword}
             acceptedTerms={acceptedTerms}
+            canSubmit={stage1CanSubmit}
             stage1Error={stage1Error}
             stage1Loading={stage1Loading}
             stage1FieldErrors={stage1FieldErrors}
