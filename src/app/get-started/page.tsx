@@ -849,6 +849,7 @@ export default function GetStartedPage() {
         emailAddress: email.trim(),
         password,
         confirmPassword,
+        otpType: 1,
       });
       console.log("[Stage 1] account-creation-web response:", res);
 

@@ -8,6 +8,7 @@ export type AccountCreationWebRequest = {
   emailAddress: string;
   password: string;
   confirmPassword: string;
+  otpType?: number;
 };
 
 export type AuthTokenData = {
