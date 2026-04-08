@@ -207,48 +207,48 @@ export default function TransactionsPage() {
 
         <div className="mt-5 bg-white rounded-[10px] p-6 relative">
           <LoadingOverlay show={loading} label="Loading transactions..." />
-            <div className="flex items-center justify-between">
-              <p className="text-[17px] font-semibold text-[#2E2E2E]">
-                All Transactions
-              </p>
+          <div className="flex items-center justify-between">
+            <p className="text-[17px] font-semibold text-[#2E2E2E]">
+              All Transactions
+            </p>
 
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setFilterOpen((v) => !v)}
-                  className="inline-flex h-[30px] items-center justify-center gap-2 rounded-[6px] border border-[#EEEEEE] bg-white px-3 leading-none hover:bg-[#FAFAFA] transition-colors"
-                >
-                  <Image
-                    src={imagesAndIcons.filters}
-                    alt="Filter"
-                    width={16}
-                    height={16}
-                    className="h-4 w-4"
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setFilterOpen((v) => !v)}
+                className="inline-flex h-[30px] items-center justify-center gap-2 rounded-[6px] border border-[#EEEEEE] bg-white px-3 leading-none hover:bg-[#FAFAFA] transition-colors"
+              >
+                <Image
+                  src={imagesAndIcons.filters}
+                  alt="Filter"
+                  width={16}
+                  height={16}
+                  className="h-4 w-4"
+                />
+                <span className="text-[11px] font-medium leading-none text-[#2E2E2E]">
+                  Filter
+                </span>
+              </button>
+
+              {filterOpen ? (
+                <div className="absolute right-0 top-[calc(100%+10px)] z-20">
+                  <TransactionsFilterPopover
+                    open={filterOpen}
+                    setOpen={setFilterOpen}
+                    initial={filter}
+                    onReset={() => {
+                      setFilter({ date: "All", type: "All" });
+                      setPageNumber(1);
+                    }}
+                    onApply={(p) => {
+                      setFilter({ ...(p || {}) });
+                      setPageNumber(1);
+                    }}
                   />
-                  <span className="text-[11px] font-medium leading-none text-[#2E2E2E]">
-                    Filter
-                  </span>
-                </button>
-
-                {filterOpen ? (
-                  <div className="absolute right-0 top-[calc(100%+10px)] z-20">
-                    <TransactionsFilterPopover
-                      open={filterOpen}
-                      setOpen={setFilterOpen}
-                      initial={filter}
-                      onReset={() => {
-                        setFilter({ date: "All", type: "All" });
-                        setPageNumber(1);
-                      }}
-                      onApply={(p) => {
-                        setFilter({ ...(p || {}) });
-                        setPageNumber(1);
-                      }}
-                    />
-                  </div>
-                ) : null}
-              </div>
+                </div>
+              ) : null}
             </div>
+          </div>
 
           <div className="mt-4">
             {error ? (

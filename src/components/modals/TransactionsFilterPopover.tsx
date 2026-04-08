@@ -80,6 +80,8 @@ export default function TransactionsFilterPopover({
     ...(initial || {}),
   });
 
+  const digitsOnly = (v: string) => (v || "").replace(/[^\d]/g, "");
+
   const toggle = (s: Section) => setOpenSection((p) => (p === s ? s : s));
 
   const reset = () => {
@@ -151,18 +153,32 @@ export default function TransactionsFilterPopover({
           {openSection === "amount" ? (
             <div className="mt-2 flex items-center gap-2">
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 placeholder="Min"
                 value={payload.minAmount || ""}
-                onChange={(e) => setPayload((p) => ({ ...p, minAmount: e.target.value }))}
+                onChange={(e) =>
+                  setPayload((p) => ({
+                    ...p,
+                    minAmount: digitsOnly(e.target.value),
+                  }))
+                }
                 className="w-full border border-gray-300 rounded-md px-2 py-1 text-xs text-[#000000] placeholder:text-[#9CA3AF]"
               />
               <span className="text-gray-500 text-xs">-</span>
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 placeholder="Max"
                 value={payload.maxAmount || ""}
-                onChange={(e) => setPayload((p) => ({ ...p, maxAmount: e.target.value }))}
+                onChange={(e) =>
+                  setPayload((p) => ({
+                    ...p,
+                    maxAmount: digitsOnly(e.target.value),
+                  }))
+                }
                 className="w-full border border-gray-300 rounded-md px-2 py-1 text-xs text-[#000000] placeholder:text-[#9CA3AF]"
               />
             </div>
