@@ -249,7 +249,7 @@ export default function IdentityVerificationModal({
       const payload = {
         nin,
         ninUrl: uploadedUrl,
-        proofOfAddressTypeId: addressTypeId,
+        proofOfAddressType: addressTypeId,
         proofOfAddressUrl: addressUploadedUrl,
       };
       console.log("[Identity] filestack upload url:", uploadedUrl);
@@ -344,16 +344,15 @@ export default function IdentityVerificationModal({
       position="center"
       contentClassName="p-0"
     >
-      <div className="w-[92vw] max-w-[550px] bg-white rounded-[10px] p-4">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
+      <div className="flex w-[92vw] max-w-[550px] max-h-[min(90dvh,calc(100vh-2rem))] flex-col overflow-hidden rounded-[10px] bg-white">
+        <div className="flex shrink-0 items-center justify-between border-b border-black/5 px-4 py-3">
           <h3 className="text-[16px] font-semibold text-[#2E2E2E]">
             Identity Verification
           </h3>
           <button
             type="button"
             onClick={() => setOpen(false)}
-            className="p-1 hover:bg-[#F8F8F8] rounded transition-colors"
+            className="rounded p-1 transition-colors hover:bg-[#F8F8F8]"
             aria-label="Close"
           >
             <Image
@@ -361,12 +360,12 @@ export default function IdentityVerificationModal({
               alt="Close"
               width={20}
               height={20}
-              className="w-5 h-5"
+              className="h-5 w-5"
             />
           </button>
         </div>
 
-        <div className="space-y-4">
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 py-4">
           {/* ID Number */}
           <div>
             <label className="block text-[12px] font-medium text-[#2E2E2E] mb-2">
@@ -608,9 +607,10 @@ export default function IdentityVerificationModal({
               </div>
             )}
           </div>
+        </div>
 
-          {/* Actions */}
-          <div className="flex items-center justify-end gap-3 pt-2">
+        <div className="shrink-0 border-t border-black/5 bg-white px-4 py-3">
+          <div className="flex items-center justify-end gap-3">
             <Button.SmSecondary
               label="Cancel"
               height={38}
@@ -631,8 +631,7 @@ export default function IdentityVerificationModal({
               disabled={!canProceed || isSubmitting}
             />
           </div>
-
-          <div className="min-h-[16px]">
+          <div className="mt-2 min-h-[16px]">
             {submitError ? (
               <p className="text-[11px] text-[#E53935]">{submitError}</p>
             ) : null}

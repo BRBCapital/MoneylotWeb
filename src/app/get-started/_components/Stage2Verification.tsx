@@ -6,6 +6,7 @@ import OnboardingCard from "@/components/organisms/onboarding/OnboardingCard";
 import Button from "@/components/ui/Button";
 import {
   DateField,
+  SearchableSelectField,
   SelectField,
   TextField,
 } from "@/components/molecules/forms/Field";
@@ -26,6 +27,10 @@ export default function Stage2Verification({
   city,
   countriesLoading,
   countriesError,
+  statesLoading,
+  statesError,
+  citiesLoading,
+  citiesError,
   countryOptions,
   stateOptions,
   cityOptions,
@@ -49,6 +54,10 @@ export default function Stage2Verification({
   city: string;
   countriesLoading: boolean;
   countriesError: string | null;
+  statesLoading: boolean;
+  statesError: string | null;
+  citiesLoading: boolean;
+  citiesError: string | null;
   countryOptions: Array<{ label: string; value: string }>;
   stateOptions: Array<{ label: string; value: string }>;
   cityOptions: Array<{ label: string; value: string }>;
@@ -135,22 +144,54 @@ export default function Stage2Verification({
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <SelectField
-            label="State"
-            placeholder={country.trim() ? "Select State" : "Select country first"}
-            value={stateCode}
-            onChange={onStateCodeChange}
-            options={stateOptions}
-            error={stage2FieldErrors.state}
-          />
-          <SelectField
-            label="City"
-            placeholder={stateCode.trim() ? "Select City" : "Select state first"}
-            value={city}
-            onChange={onCityChange}
-            options={cityOptions}
-            error={stage2FieldErrors.city}
-          />
+          <div className="w-full">
+            <SelectField
+              label="State"
+              placeholder={
+                !country.trim()
+                  ? "Select country first"
+                  : statesLoading
+                    ? "Loading states..."
+                    : "Select state"
+              }
+              value={stateCode}
+              onChange={onStateCodeChange}
+              options={stateOptions}
+              disabled={!country.trim() || statesLoading}
+              error={stage2FieldErrors.state}
+            />
+            {statesError ? (
+              <p className="mt-1 text-[10px] text-[#E53935]">{statesError}</p>
+            ) : null}
+          </div>
+          <div className="w-full">
+            <SearchableSelectField
+              label="City"
+              placeholder={
+                !stateCode.trim()
+                  ? "Select state first"
+                  : citiesLoading
+                    ? "Loading cities..."
+                    : "Search or type your city"
+              }
+              searchPlaceholder="Search cities"
+              value={city}
+              onChange={onCityChange}
+              options={cityOptions}
+              disabled={!stateCode.trim() || citiesLoading}
+              allowCustom
+              error={stage2FieldErrors.city}
+            />
+            {citiesError ? (
+              <p className="mt-1 text-[10px] text-[#E53935]">{citiesError}</p>
+            ) : null}
+            {stateCode.trim() ? (
+              <p className="mt-1 text-[10px] text-[#5F6368]">
+                If your city is missing, type the full name: press Enter when there are
+                no suggestions, or tap Use &quot;…&quot; when it appears under the list.
+              </p>
+            ) : null}
+          </div>
         </div>
       </OnboardingCard>
     </>

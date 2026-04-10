@@ -78,7 +78,7 @@ export default function Modal({
             ? `w-[98%] lg:w-[440px] h-[20vh] max-h-[20vh] bg-white rounded-xl overflow-y-auto mr-4 lg:mr-6 shadow-xl ${
                 isExiting ? "slide-out-right" : "slide-in-right"
               }`
-            : "w-[98%] lg:w-auto bg-white rounded-xl max-h-[90%] overflow-y-visible p-5"
+            : "w-[98%] lg:w-auto max-h-[calc(100vh-2rem)] overflow-y-auto overflow-x-hidden bg-white rounded-xl p-5"
         } ${contentClassName}`}
         style={contentStyle}
       >

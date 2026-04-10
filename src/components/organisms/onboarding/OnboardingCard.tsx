@@ -27,8 +27,12 @@ export default function OnboardingCard({
         <div
           className={`${contentTopClassName} min-h-[320px] flex flex-col ${contentWrapClassName}`}
         >
-          <div className={`flex-1 ${contentClassName}`}>{children}</div>
-          {footer ? <div className="mt-5">{footer}</div> : null}
+          <div className={`relative z-10 flex-1 ${contentClassName}`}>
+            {children}
+          </div>
+          {footer ? (
+            <div className="relative z-0 mt-5 shrink-0">{footer}</div>
+          ) : null}
         </div>
       </div>
     </div>

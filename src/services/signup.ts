@@ -27,6 +27,9 @@ export type AuthTokenData = {
   enforcePassword: boolean;
   isNINVerified?: boolean;
   ninVerified?: boolean;
+  /** Some APIs expose NIN state as a boolean flag instead of ninVerified */
+  ninStatus?: boolean;
+  bvnStatus?: boolean;
   kycStatus?: number;
   stage1?: boolean;
   stage1_5?: boolean;
@@ -34,11 +37,12 @@ export type AuthTokenData = {
   stage3?: boolean;
   stage3_5?: boolean;
   stage4?: boolean;
+  emailVerified?: boolean;
 };
 
 export type AuthTokenResponse = {
   status: boolean;
-  message: string;
+  message?: string | null;
   data?: AuthTokenData | null;
   statusCode?: number;
   error?: unknown;

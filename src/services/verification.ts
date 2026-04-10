@@ -1,6 +1,7 @@
 import { apiGetJson, apiPostJson } from "@/lib/apiClient";
 
 export type CountryDto = {
+  id?: number;
   code: string;
   name: string;
 };
@@ -15,20 +16,40 @@ type GetCountryResponse = {
 
 function normalizeCountry(x: RawCountry): CountryDto | null {
   if (!x || typeof x !== "object") return null;
+  if (
+    typeof (x as { isActive?: boolean }).isActive === "boolean" &&
+    !(x as { isActive?: boolean }).isActive
+  ) {
+    return null;
+  }
+  const countryNameAlt = x.countryName;
+  const countryAlt = x.country;
   const name =
     (typeof x.name === "string" && x.name.trim()) ||
-    (typeof (x as any).countryName === "string" &&
-      (x as any).countryName.trim()) ||
-    (typeof (x as any).country === "string" && (x as any).country.trim()) ||
+    (typeof countryNameAlt === "string" && countryNameAlt.trim()) ||
+    (typeof countryAlt === "string" && countryAlt.trim()) ||
     "";
+  const codeRaw = x.code;
+  const iso2 = x.iso2;
+  const cc = x.countryCode;
   const code =
-    (typeof (x as any).code === "string" && (x as any).code.trim()) ||
-    (typeof (x as any).iso2 === "string" && (x as any).iso2.trim()) ||
-    (typeof (x as any).countryCode === "string" &&
-      (x as any).countryCode.trim()) ||
+    (typeof codeRaw === "string" && codeRaw.trim()) ||
+    (typeof iso2 === "string" && iso2.trim()) ||
+    (typeof cc === "string" && cc.trim()) ||
     name;
   if (!name) return null;
-  return { name, code };
+  const idRaw = (x as { id?: unknown }).id;
+  const id =
+    typeof idRaw === "number"
+      ? idRaw
+      : typeof idRaw === "string"
+        ? Number(idRaw)
+        : NaN;
+  return {
+    name,
+    code,
+    ...(Number.isFinite(id) && id > 0 ? { id } : {}),
+  };
 }
 
 export async function getCountries(signal?: AbortSignal) {
@@ -50,6 +71,117 @@ export async function getCountries(signal?: AbortSignal) {
     status: res.status,
     message: res.message,
     data: list as CountryDto[],
+  };
+}
+
+export type StateDto = {
+  id: number;
+  countryCode: string;
+  name: string;
+};
+
+type GetStateResponse = {
+  status: boolean;
+  message: string;
+  data: RawCountry[];
+};
+
+function normalizeState(x: RawCountry): StateDto | null {
+  if (!x || typeof x !== "object") return null;
+  const idRaw = (x as { id?: unknown }).id;
+  const id = typeof idRaw === "number" ? idRaw : Number(idRaw);
+  const name =
+    typeof (x as { name?: string }).name === "string"
+      ? (x as { name: string }).name.trim()
+      : "";
+  const countryCode =
+    typeof (x as { countryCode?: string }).countryCode === "string"
+      ? (x as { countryCode: string }).countryCode.trim()
+      : "";
+  if (!Number.isFinite(id) || id <= 0) return null;
+  if (!name) return null;
+  return { id, name, countryCode };
+}
+
+export async function getStatesByCountryCode(
+  countryCode: string,
+  signal?: AbortSignal,
+) {
+  const cc = (countryCode || "").trim();
+  if (!cc) {
+    return { status: true as const, message: "", data: [] as StateDto[] };
+  }
+  const res = await apiGetJson<GetStateResponse>(
+    `/api/v1/verification/get-state/${encodeURIComponent(cc)}`,
+    { signal },
+  );
+  if (!res?.status) {
+    throw new Error(
+      res?.message || "Unable to load states. Please try again.",
+    );
+  }
+  const list = Array.isArray(res.data)
+    ? res.data.map(normalizeState).filter(Boolean)
+    : [];
+  return {
+    status: res.status,
+    message: res.message,
+    data: list as StateDto[],
+  };
+}
+
+export type CityDto = {
+  id: number;
+  stateId: number;
+  name: string;
+};
+
+type GetCityResponse = {
+  status: boolean;
+  message: string;
+  data: RawCountry[];
+};
+
+function normalizeCity(x: RawCountry): CityDto | null {
+  if (!x || typeof x !== "object") return null;
+  const idRaw = (x as { id?: unknown }).id;
+  const id = typeof idRaw === "number" ? idRaw : Number(idRaw);
+  const stateIdRaw = (x as { stateId?: unknown }).stateId;
+  const stateId =
+    typeof stateIdRaw === "number" ? stateIdRaw : Number(stateIdRaw);
+  const name =
+    typeof (x as { name?: string }).name === "string"
+      ? (x as { name: string }).name.trim()
+      : "";
+  if (!Number.isFinite(id) || id <= 0) return null;
+  if (!Number.isFinite(stateId) || stateId <= 0) return null;
+  if (!name) return null;
+  return { id, stateId, name };
+}
+
+export async function getCitiesByStateId(
+  stateId: number | string,
+  signal?: AbortSignal,
+) {
+  const sid =
+    typeof stateId === "number" ? stateId : Number(String(stateId).trim());
+  if (!Number.isFinite(sid) || sid <= 0) {
+    return { status: true as const, message: "", data: [] as CityDto[] };
+  }
+  const res = await apiGetJson<GetCityResponse>(
+    `/api/v1/verification/get-city/${encodeURIComponent(String(sid))}`,
+    { signal },
+  );
+  if (!res?.status) {
+    throw new Error(res?.message || "Unable to load cities. Please try again.");
+  }
+  const list = Array.isArray(res.data)
+    ? res.data.map(normalizeCity).filter(Boolean)
+    : [];
+  return {
+    status: res.status,
+    message: res.message,
+    data: list as CityDto[],
   };
 }
 
@@ -104,7 +236,7 @@ export async function getIdentityTypes(signal?: AbortSignal) {
 export type VerifyNinRequest = {
   nin: string;
   ninUrl: string;
-  proofOfAddressTypeId?: number | null;
+  proofOfAddressType?: number | null;
   proofOfAddressUrl?: string | null;
 };
 
@@ -120,9 +252,9 @@ export async function verifyNin(payload: VerifyNinRequest) {
     {
       nin: (payload.nin || "").trim(),
       ninUrl: payload.ninUrl,
-      ...(typeof payload.proofOfAddressTypeId === "number" &&
-      Number.isFinite(payload.proofOfAddressTypeId)
-        ? { proofOfAddressTypeId: payload.proofOfAddressTypeId }
+      ...(typeof payload.proofOfAddressType === "number" &&
+      Number.isFinite(payload.proofOfAddressType)
+        ? { proofOfAddressType: payload.proofOfAddressType }
         : {}),
       ...(payload.proofOfAddressUrl
         ? { proofOfAddressUrl: payload.proofOfAddressUrl }

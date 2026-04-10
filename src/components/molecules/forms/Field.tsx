@@ -52,6 +52,7 @@ export function SelectField({
   value,
   onChange,
   options,
+  disabled,
   error,
 }: {
   label: string;
@@ -59,6 +60,7 @@ export function SelectField({
   value: string;
   onChange: (v: string) => void;
   options: Array<{ label: string; value: string }>;
+  disabled?: boolean;
   error?: string | null;
 }) {
   return (
@@ -69,8 +71,11 @@ export function SelectField({
       <div className="relative mt-1">
         <select
           value={value}
+          disabled={disabled}
           onChange={(e) => onChange(e.target.value)}
-          className="h-[40px] w-full appearance-none rounded-[6px] border border-black/10 bg-white px-3 pr-10 text-[12px] text-[#2E2E2E] outline-none focus:border-[#89E081] focus:outline-none focus:ring-0"
+          className={`h-[40px] w-full appearance-none rounded-[6px] border border-black/10 px-3 pr-10 text-[12px] text-[#2E2E2E] outline-none focus:border-[#89E081] focus:outline-none focus:ring-0 ${
+            disabled ? "cursor-not-allowed bg-[#F3F3F3] opacity-70" : "bg-white"
+          }`}
         >
           <option value="">{placeholder}</option>
           {options.map((o) => (
@@ -107,6 +112,7 @@ export function SearchableSelectField({
   options,
   disabled,
   error,
+  allowCustom = false,
 }: {
   label: string;
   placeholder?: string;
@@ -116,6 +122,8 @@ export function SearchableSelectField({
   options: Array<{ label: string; value: string }>;
   disabled?: boolean;
   error?: string | null;
+  /** When true, users can commit text that is not in `options` (search + Enter or the "Use …" action). */
+  allowCustom?: boolean;
 }) {
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -124,14 +132,53 @@ export function SearchableSelectField({
 
   const selectedLabel = useMemo(() => {
     const found = options.find((o) => o.value === value);
-    return found?.label || "";
-  }, [options, value]);
+    if (found) return found.label;
+    if (allowCustom && value.trim()) return value.trim();
+    return "";
+  }, [allowCustom, options, value]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return options;
     return options.filter((o) => o.label.toLowerCase().includes(q));
   }, [options, query]);
+
+  const queryTrim = query.trim();
+  const hasExactOption =
+    !!queryTrim &&
+    options.some(
+      (o) =>
+        o.label.toLowerCase() === queryTrim.toLowerCase() ||
+        o.value.toLowerCase() === queryTrim.toLowerCase(),
+    );
+  const showCustomRow = allowCustom && !!queryTrim && !hasExactOption;
+
+  const commitSelection = (next: string) => {
+    onChange(next);
+    setOpen(false);
+    setQuery("");
+  };
+
+  const commitFromQuery = () => {
+    const q = queryTrim;
+    if (!q) return;
+    const exact = options.find(
+      (o) =>
+        o.label.toLowerCase() === q.toLowerCase() ||
+        o.value.toLowerCase() === q.toLowerCase(),
+    );
+    if (exact) {
+      commitSelection(exact.value);
+      return;
+    }
+    if (filtered.length === 1) {
+      commitSelection(filtered[0].value);
+      return;
+    }
+    if (allowCustom && filtered.length === 0) {
+      commitSelection(q);
+    }
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -193,12 +240,18 @@ export function SearchableSelectField({
         </span>
 
         {open ? (
-          <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-30 overflow-hidden rounded-[10px] border border-black/10 bg-white shadow-[0_10px_25px_rgba(0,0,0,0.08)]">
+          <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-50 overflow-hidden rounded-[10px] border border-black/10 bg-white shadow-[0_10px_25px_rgba(0,0,0,0.08)]">
             <div className="p-2">
               <input
                 ref={inputRef}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    commitFromQuery();
+                  }
+                }}
                 placeholder={searchPlaceholder}
                 className="h-[36px] w-full rounded-[8px] border border-black/10 bg-white px-3 text-[12px] text-[#2E2E2E] outline-none focus:border-[#89E081]"
               />
@@ -207,34 +260,46 @@ export function SearchableSelectField({
               role="listbox"
               className="max-h-[220px] overflow-auto scrollbar-hidden"
             >
-              {filtered.length === 0 ? (
+              {filtered.length === 0 && !showCustomRow ? (
                 <div className="px-3 py-3 text-[12px] text-[#5F6368]">
                   No results
                 </div>
               ) : (
-                filtered.map((o) => (
-                  <button
-                    key={o.value}
-                    type="button"
-                    role="option"
-                    aria-selected={o.value === value}
-                    onClick={() => {
-                      onChange(o.value);
-                      setOpen(false);
-                      setQuery("");
-                    }}
-                    className={`flex w-full items-center justify-between px-3 py-2 text-left text-[12px] ${
-                      o.value === value
-                        ? "bg-[#5FCE551A] text-[#2E2E2E]"
-                        : "text-[#2E2E2E] hover:bg-black/5"
-                    }`}
-                  >
-                    <span className="truncate">{o.label}</span>
-                    {o.value === value ? (
-                      <span className="ml-3 text-[#89E081]">✓</span>
-                    ) : null}
-                  </button>
-                ))
+                <>
+                  {filtered.map((o, i) => (
+                    <button
+                      key={`${o.value}__${i}`}
+                      type="button"
+                      role="option"
+                      aria-selected={o.value === value}
+                      onClick={() => {
+                        commitSelection(o.value);
+                      }}
+                      className={`flex w-full items-center justify-between px-3 py-2 text-left text-[12px] ${
+                        o.value === value
+                          ? "bg-[#5FCE551A] text-[#2E2E2E]"
+                          : "text-[#2E2E2E] hover:bg-black/5"
+                      }`}
+                    >
+                      <span className="truncate">{o.label}</span>
+                      {o.value === value ? (
+                        <span className="ml-3 text-[#89E081]">✓</span>
+                      ) : null}
+                    </button>
+                  ))}
+                  {showCustomRow ? (
+                    <div className="border-t border-black/5 p-2">
+                      <button
+                        type="button"
+                        role="option"
+                        onClick={() => commitSelection(queryTrim)}
+                        className="w-full rounded-[8px] bg-black/3 px-3 py-2 text-left text-[12px] text-[#2E2E2E] hover:bg-black/6"
+                      >
+                        Use &quot;{queryTrim}&quot;
+                      </button>
+                    </div>
+                  ) : null}
+                </>
               )}
             </div>
           </div>

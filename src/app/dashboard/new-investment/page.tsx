@@ -123,7 +123,6 @@ export default function NewInvestmentPage() {
   const [step, setStep] = useState<Step>(1);
   const [pinOpen, setPinOpen] = useState(false);
   const [transactionPin, setTransactionPin] = useState("");
-  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
   const [createdInvestmentId, setCreatedInvestmentId] = useState<number | null>(
     null,
   );
@@ -214,11 +213,6 @@ export default function NewInvestmentPage() {
   );
   const [tenorText, setTenorText] = useState<string | null>(null);
   const [acknowledge, setAcknowledge] = useState(false);
-
-  useEffect(() => {
-    if (step !== 3) return;
-    setPaymentConfirmed(false);
-  }, [step]);
 
   const amount = useMemo(
     () => parseMoney(effectiveAmountInput),
@@ -815,14 +809,6 @@ export default function NewInvestmentPage() {
               </p>
             </div>
 
-            <div className="mt-4 flex items-center gap-3 rounded-[6px] border border-[#89E081] bg-[#89E0811A] px-4 py-3 text-[12px] leading-[18px] text-[#5F6368]">
-              <IconCheckbox
-                checked={paymentConfirmed}
-                onChange={(next) => setPaymentConfirmed(next)}
-              />
-              <div>I confirm I have made this payment.</div>
-            </div>
-
             <div className="mt-5 flex justify-center">
               <Button.SmPrimary
                 label="I have made this payment"
@@ -831,7 +817,7 @@ export default function NewInvestmentPage() {
                 fontSize="text-[11px]"
                 className="rounded-[8px] font-medium"
                 loading={fundingLoading ? "Please wait" : undefined}
-                disabled={fundingLoading || !paymentConfirmed}
+                disabled={fundingLoading}
                 onClick={() => setStep(4)}
               />
             </div>

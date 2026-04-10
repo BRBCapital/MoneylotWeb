@@ -24,7 +24,7 @@ import PaymentDetailsTable from "@/components/organisms/onboarding/PaymentDetail
 import Image from "next/image";
 import { imagesAndIcons } from "@/constants/imagesAndIcons";
 import { useRouter, useSearchParams } from "next/navigation";
-import { accountCreationWeb } from "@/services/signup";
+import { accountCreationWeb, type AuthTokenData } from "@/services/signup";
 import { ApiError } from "@/lib/apiClient";
 import { checkPasswordValidity } from "@/lib/password";
 import { getAccountTypes } from "@/services/account";
@@ -46,7 +46,14 @@ import {
   getBanks,
   validateAccount,
 } from "@/services/withdrawal";
-import { getCountries } from "@/services/verification";
+import {
+  type CityDto,
+  type CountryDto,
+  getCitiesByStateId,
+  getCountries,
+  getStatesByCountryCode,
+  type StateDto,
+} from "@/services/verification";
 import {
   setAuthSession,
   getAuthSession,
@@ -71,7 +78,6 @@ import {
   secureSetJson,
 } from "@/lib/secureStorage";
 import IconCheckbox from "@/components/ui/IconCheckbox";
-import { City, State } from "country-state-city";
 import Stage1AccountCreation from "@/app/get-started/_components/Stage1AccountCreation";
 import Stage2Verification from "@/app/get-started/_components/Stage2Verification";
 import Stage3BankDetails from "@/app/get-started/_components/Stage3BankDetails";
@@ -231,9 +237,13 @@ export default function GetStartedPage() {
   const [stateCode, setStateCode] = useState("");
   const [countriesLoading, setCountriesLoading] = useState(false);
   const [countriesError, setCountriesError] = useState<string | null>(null);
-  const [countries, setCountries] = useState<
-    Array<{ code: string; name: string }>
-  >([]);
+  const [countries, setCountries] = useState<CountryDto[]>([]);
+  const [statesLoading, setStatesLoading] = useState(false);
+  const [statesError, setStatesError] = useState<string | null>(null);
+  const [states, setStates] = useState<StateDto[]>([]);
+  const [citiesLoading, setCitiesLoading] = useState(false);
+  const [citiesError, setCitiesError] = useState<string | null>(null);
+  const [cities, setCities] = useState<CityDto[]>([]);
 
   const [bankName, setBankName] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
@@ -315,6 +325,10 @@ export default function GetStartedPage() {
     setCity("");
     setState_("");
     setStateCode("");
+    setStates([]);
+    setCities([]);
+    setStatesError(null);
+    setCitiesError(null);
     setStage2Error(null);
     setStage2FieldErrors({});
   };
@@ -1000,6 +1014,153 @@ export default function GetStartedPage() {
         return;
       }
 
+      const creationData = res.data;
+      const hasStageProgress =
+        creationData &&
+        typeof creationData === "object" &&
+        ("stage1" in creationData || "stage1_5" in creationData);
+
+      if (hasStageProgress) {
+        const d = creationData as Record<string, unknown>;
+        const emailValue = email.trim();
+
+        if (Boolean(d.stage3_5)) {
+          showSuccessToast("Success", "Continue your onboarding process");
+          router.push("/login");
+          return;
+        }
+
+        const stage1_5Done = Boolean(d.stage1_5 ?? d.emailVerified);
+
+        if (!stage1_5Done) {
+          setStage1SignupContext({
+            userId: typeof d.userId === "number" ? d.userId : null,
+            accountId: typeof d.accountId === "number" ? d.accountId : null,
+            emailAddress: emailValue,
+            password,
+            firstName: firstName.trim(),
+            lastName: lastName.trim(),
+          });
+          setUserEmail(emailValue);
+          setOtpOpen(true);
+          clearStage1Form();
+          return;
+        }
+
+        const canUseCreationSession =
+          typeof d.sessionToken === "string" &&
+          d.sessionToken.trim() !== "" &&
+          typeof d.accountId === "number" &&
+          typeof d.userId === "number";
+
+        if (!canUseCreationSession) {
+          try {
+            const loginRes = await securityLogin({
+              emailAddress: emailValue,
+              password,
+            });
+            console.log(
+              "[Stage 1] auth/login (after account-creation-web) response:",
+              loginRes,
+            );
+            if (!loginRes?.status || !loginRes?.data?.sessionToken) {
+              throw new Error("Unable to create login session");
+            }
+
+            setUserEmail(emailValue);
+            setAuthSession({
+              accountId: loginRes.data.accountId,
+              userId: loginRes.data.userId,
+              firstName: loginRes.data.firstName,
+              lastName: loginRes.data.lastName,
+              refreshToken: loginRes.data.refreshToken,
+              sessionToken: loginRes.data.sessionToken,
+              expires: loginRes.data.expires,
+              refreshTokenExpiryTime: loginRes.data.refreshTokenExpiryTime,
+              enforcePassword: loginRes.data.enforcePassword,
+              stage1: Boolean(loginRes.data.stage1),
+              stage1_5: Boolean(loginRes.data.stage1_5),
+              stage2: Boolean(loginRes.data.stage2),
+              stage3: Boolean(loginRes.data.stage3),
+              stage3_5: Boolean(loginRes.data.stage3_5),
+              stage4: Boolean(loginRes.data.stage4),
+              kycStatus:
+                typeof loginRes.data.kycStatus === "number"
+                  ? loginRes.data.kycStatus
+                  : Number.isFinite(Number(loginRes.data.kycStatus))
+                    ? Number(loginRes.data.kycStatus)
+                    : undefined,
+              ninVerified: Boolean(
+                loginRes.data.ninVerified ??
+                  loginRes.data.isNINVerified ??
+                  loginRes.data.ninStatus,
+              ),
+            });
+          } catch {
+            setStage1FieldErrors((p) => ({ ...p, password: "Wrong password" }));
+            return;
+          }
+        } else {
+          const td = d as unknown as AuthTokenData;
+          setUserEmail(emailValue);
+          setAuthSession({
+            accountId: td.accountId,
+            userId: td.userId,
+            firstName: td.firstName,
+            lastName: td.lastName,
+            refreshToken: td.refreshToken,
+            sessionToken: td.sessionToken,
+            expires: td.expires,
+            refreshTokenExpiryTime: td.refreshTokenExpiryTime,
+            enforcePassword: td.enforcePassword,
+            stage1: Boolean(td.stage1),
+            stage1_5: Boolean(td.stage1_5),
+            stage2: Boolean(td.stage2),
+            stage3: Boolean(td.stage3),
+            stage3_5: Boolean(td.stage3_5),
+            stage4: Boolean(td.stage4),
+            kycStatus:
+              typeof td.kycStatus === "number"
+                ? td.kycStatus
+                : Number.isFinite(Number(td.kycStatus))
+                  ? Number(td.kycStatus)
+                  : undefined,
+            ninVerified: Boolean(
+              td.ninVerified ?? td.isNINVerified ?? td.ninStatus,
+            ),
+          });
+        }
+
+        showSuccessToast("Success", "Continue your onboarding process");
+
+        const stage1Done = Boolean(d.stage1);
+        const stage2Done = Boolean(d.stage2);
+        const stage3Done = Boolean(d.stage3);
+
+        if (stage1Done && !stage2Done) {
+          setStage(2);
+          clearStage1Form();
+          return;
+        }
+        if (stage2Done && !stage3Done) {
+          setStage(3);
+          clearStage1Form();
+          clearStage2Form();
+          return;
+        }
+        if (stage3Done && !Boolean(d.stage3_5)) {
+          setStage(3);
+          setPinOpen(true);
+          clearStage1Form();
+          clearStage2Form();
+          clearStage3Form();
+          return;
+        }
+
+        router.push("/login");
+        return;
+      }
+
       setStage1SignupContext({
         userId: typeof (res as any)?.data?.userId === "number" ? (res as any).data.userId : null,
         accountId: typeof (res as any)?.data?.accountId === "number" ? (res as any).data.accountId : null,
@@ -1188,6 +1349,10 @@ export default function GetStartedPage() {
     setStateCode("");
     setState_("");
     setCity("");
+    setStates([]);
+    setCities([]);
+    setStatesError(null);
+    setCitiesError(null);
     if (stage2FieldErrors.country) {
       setStage2FieldErrors((p) => ({ ...p, country: undefined }));
     }
@@ -1200,8 +1365,12 @@ export default function GetStartedPage() {
   };
   const onStage2StateCodeChange = (code: string) => {
     setStateCode(code);
-    const found = stateOptions.find((s) => s.value === code);
-    setState_(found?.label || "");
+    const id = Number(code);
+    const found =
+      Number.isFinite(id) && id > 0
+        ? states.find((s) => s.id === id)
+        : undefined;
+    setState_(found?.name || "");
     setCity("");
     if (stage2FieldErrors.state) {
       setStage2FieldErrors((p) => ({ ...p, state: undefined }));
@@ -1382,33 +1551,38 @@ export default function GetStartedPage() {
   }, [countries]);
 
   const stateOptions = useMemo(() => {
-    const cc = (country || "").trim();
-    if (!cc) return [];
-    try {
-      return State.getStatesOfCountry(cc).map((s) => ({
-        label: s.name,
-        value: s.isoCode,
-      }));
-    } catch {
-      return [];
-    }
-  }, [country]);
+    return states.map((s) => ({
+      label: s.name,
+      value: String(s.id),
+    }));
+  }, [states]);
 
   const cityOptions = useMemo(() => {
-    const cc = (country || "").trim();
-    const sc = (stateCode || "").trim();
-    if (!cc || !sc) return [];
-    try {
-      return City.getCitiesOfState(cc, sc).map((c) => ({
-        label: c.name,
-        value: c.name,
-      }));
-    } catch {
-      return [];
-    }
-  }, [country, stateCode]);
+    return cities.map((c) => ({
+      label: c.name,
+      value: c.name,
+    }));
+  }, [cities]);
 
-  // If we have a saved state name but no stateCode yet, try to infer it.
+  // Drop persisted ISO state codes / invalid ids when API state list loads.
+  useEffect(() => {
+    if (stage !== 2) return;
+    if (!stateCode.trim() || states.length === 0) return;
+    const sid = Number(stateCode.trim());
+    if (!Number.isFinite(sid) || sid <= 0) {
+      setStateCode("");
+      setState_("");
+      setCity("");
+      return;
+    }
+    if (!states.some((s) => s.id === sid)) {
+      setStateCode("");
+      setState_("");
+      setCity("");
+    }
+  }, [stage, stateCode, states]);
+
+  // If we have a saved state name but no state id yet, try to infer it.
   useEffect(() => {
     if (!country.trim()) return;
     if (!state.trim()) return;
@@ -1468,6 +1642,73 @@ export default function GetStartedPage() {
     })();
     return () => ac.abort();
   }, [stage]);
+
+  useEffect(() => {
+    if (stage !== 2) return;
+    const cc = country.trim();
+    if (!cc) {
+      setStates([]);
+      setStatesError(null);
+      setStatesLoading(false);
+      return;
+    }
+    const ac = new AbortController();
+    (async () => {
+      try {
+        setStatesError(null);
+        setStatesLoading(true);
+        setStates([]);
+        setCities([]);
+        const res = await getStatesByCountryCode(cc, ac.signal);
+        if (res?.status && Array.isArray(res.data)) {
+          setStates(res.data);
+        } else {
+          setStatesError(res?.message || "Unable to load states");
+        }
+      } catch (e) {
+        if (isAbortError(e)) return;
+        if (e instanceof ApiError) setStatesError(e.message);
+        else if (e instanceof Error) setStatesError(e.message);
+        else setStatesError("Unable to load states");
+      } finally {
+        setStatesLoading(false);
+      }
+    })();
+    return () => ac.abort();
+  }, [stage, country]);
+
+  useEffect(() => {
+    if (stage !== 2) return;
+    const sid = Number(stateCode.trim());
+    if (!Number.isFinite(sid) || sid <= 0) {
+      setCities([]);
+      setCitiesError(null);
+      setCitiesLoading(false);
+      return;
+    }
+    const ac = new AbortController();
+    (async () => {
+      try {
+        setCitiesError(null);
+        setCitiesLoading(true);
+        setCities([]);
+        const res = await getCitiesByStateId(sid, ac.signal);
+        if (res?.status && Array.isArray(res.data)) {
+          setCities(res.data);
+        } else {
+          setCitiesError(res?.message || "Unable to load cities");
+        }
+      } catch (e) {
+        if (isAbortError(e)) return;
+        if (e instanceof ApiError) setCitiesError(e.message);
+        else if (e instanceof Error) setCitiesError(e.message);
+        else setCitiesError("Unable to load cities");
+      } finally {
+        setCitiesLoading(false);
+      }
+    })();
+    return () => ac.abort();
+  }, [stage, stateCode]);
 
   useEffect(() => {
     if (stage !== 4) return;
@@ -1712,6 +1953,10 @@ export default function GetStartedPage() {
             city={city}
             countriesLoading={countriesLoading}
             countriesError={countriesError}
+            statesLoading={statesLoading}
+            statesError={statesError}
+            citiesLoading={citiesLoading}
+            citiesError={citiesError}
             countryOptions={countryOptions}
             stateOptions={stateOptions}
             cityOptions={cityOptions}
