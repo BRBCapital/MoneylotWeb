@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { authLogout } from "@/services/auth";
 import { imagesAndIcons } from "@/constants/imagesAndIcons";
 import { useAtomValue } from "jotai";
 import { authSessionAtom, setAuthSession } from "@/state/appState";
@@ -36,7 +37,12 @@ const navItems: NavItem[] = [
   },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({
+  onNavigate,
+}: {
+  /** Called after nav actions so a mobile drawer can close */
+  onNavigate?: () => void;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const isSettingsActive =
@@ -82,6 +88,7 @@ export default function Sidebar() {
               <li key={item.href}>
                 <Link
                   href={item.href}
+                  onClick={() => onNavigate?.()}
                   className={`flex items-center gap-3 px-4 py-2.5 rounded-[8px] transition-colors ${
                     isActive
                       ? "bg-[#1B332D] text-white"
@@ -108,6 +115,7 @@ export default function Sidebar() {
         <div className="w-full overflow-hidden rounded-[8px] bg-[#F4F4F4]">
           <Link
             href="/dashboard/settings"
+            onClick={() => onNavigate?.()}
             className="flex h-[44px] w-full items-center gap-2.5 px-3 transition-colors hover:bg-[#EFEFEF]"
           >
             <span
@@ -137,28 +145,35 @@ export default function Sidebar() {
           <button
             type="button"
             onClick={() => {
-              if (typeof window === "undefined") return;
-              try {
-                setAuthSession(null);
-                window.localStorage.removeItem("moneylot_auth_session");
-                window.localStorage.removeItem("moneylot_user_email");
-              } catch {
-                // ignore
-              }
-              // Force a full reload of /login so no dashboard UI is cached.
-              try {
-                window.location.replace("/login");
-              } catch {
+              void (async () => {
+                onNavigate?.();
                 try {
-                  router.replace("/login");
+                  await authLogout();
+                } catch {
+                  // Still clear local session if the network call fails
+                }
+                if (typeof window === "undefined") return;
+                try {
+                  setAuthSession(null);
+                  window.localStorage.removeItem("moneylot_auth_session");
+                  window.localStorage.removeItem("moneylot_user_email");
+                } catch {
+                  // ignore
+                }
+                try {
+                  window.location.replace("/login");
                 } catch {
                   try {
-                    window.location.href = "/login";
+                    router.replace("/login");
                   } catch {
-                    // ignore
+                    try {
+                      window.location.href = "/login";
+                    } catch {
+                      // ignore
+                    }
                   }
                 }
-              }
+              })();
             }}
             className="flex h-[44px] w-full items-center gap-2.5 px-3 text-left transition-colors hover:bg-[#EFEFEF]"
           >

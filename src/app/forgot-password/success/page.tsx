@@ -9,7 +9,7 @@ export default function PasswordResetSuccessPage() {
   const router = useRouter();
   return (
     <AuthShell logo="moneylotIconOne" stackClassName="-translate-y-[15%]">
-      <AuthCard className="px-8 py-8 text-center">
+      <AuthCard className="px-4 py-6 text-center sm:px-8 sm:py-8">
         <h1 className="text-[16px] font-semibold text-[#2E2E2E]">
           Password Reset Successful
         </h1>

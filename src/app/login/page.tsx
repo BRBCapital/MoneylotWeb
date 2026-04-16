@@ -50,7 +50,7 @@ export default function LoginPage() {
 
   return (
     <AuthShell logo="moneylotIconOne" stackClassName="-translate-y-[15%]">
-      <AuthCard className="px-8 py-8">
+      <AuthCard className="px-4 py-6 sm:px-8 sm:py-8">
         <h1 className="text-[16px] font-semibold text-[#2E2E2E]">Welcome,</h1>
         <p className="mt-1 text-[12px] text-[#7A7A7A]">
           Enter your login credentials

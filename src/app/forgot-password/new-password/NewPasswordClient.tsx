@@ -41,7 +41,7 @@ export default function NewPasswordClient({ email }: { email: string }) {
       logo="moneylotIconOne"
       stackClassName="gap-6 md:gap-8 -translate-y-6 md:-translate-y-8"
     >
-      <AuthCard className="px-8 py-6 md:py-8">
+      <AuthCard className="px-4 py-6 sm:px-8 md:py-8">
         <h1 className="text-[16px] font-semibold text-[#2E2E2E]">
           Create a new password
         </h1>

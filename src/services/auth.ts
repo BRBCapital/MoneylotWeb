@@ -22,6 +22,18 @@ export async function securityLogin(payload: LoginRequest) {
   });
 }
 
+export type LogoutResponse = {
+  status?: boolean;
+  message?: string | null;
+  data?: unknown;
+  statusCode?: number;
+};
+
+/** Invalidates the session on the server (sends current Bearer token). */
+export async function authLogout() {
+  return await apiPostJson<LogoutResponse>("/api/v1/auth/logout", {});
+}
+
 export type SignupCallbackResponse = {
   status?: boolean;
   message?: string | null;

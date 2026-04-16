@@ -45,7 +45,7 @@ export default function OtpClient({ email, sent }: { email: string; sent?: boole
 
   return (
     <AuthShell logo="moneylotIconOne" stackClassName="-translate-y-[15%]">
-      <AuthCard className="px-8 py-8">
+      <AuthCard className="px-4 py-6 sm:px-8 sm:py-8">
         <button
           type="button"
           onClick={() => router.back()}

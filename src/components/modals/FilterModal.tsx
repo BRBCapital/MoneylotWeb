@@ -5,6 +5,7 @@ import Image from "next/image";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import { imagesAndIcons } from "@/constants/imagesAndIcons";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 export type FilterPayload = {
   quickDate?: "Today" | "Yesterday" | "7D" | "30D" | "Custom" | "";
@@ -49,6 +50,7 @@ export default function FilterModal({
   initial?: FilterPayload;
   variant?: "modal" | "popover";
 }) {
+  const isCompact = useMediaQuery("(max-width: 639px)");
   const [openSection, setOpenSection] = useState<string | null>("date");
   const [payload, setPayload] = useState<FilterPayload>(initial || {});
 
@@ -126,7 +128,7 @@ export default function FilterModal({
   );
 
   const content = (
-    <div className="w-[344px] rounded-[10px] bg-white border border-[#E9E9E9] shadow-lg p-4">
+    <div className="w-full min-w-0 max-w-[344px] rounded-[10px] border border-[#E9E9E9] bg-white p-4 shadow-lg sm:w-[344px]">
       <div className="flex justify-between items-center border-b border-gray-200 pt-1 pb-2">
         <h4 className="font-semibold text-sm">Filter by</h4>
         <button
@@ -179,14 +181,14 @@ export default function FilterModal({
               </div>
 
               {payload.quickDate === "Custom" && (
-                <div className="flex justify-between gap-2">
+                <div className="flex flex-col gap-2 sm:flex-row sm:justify-between">
                   <input
                     type="date"
                     value={payload.startDate || ""}
                     onChange={(e) =>
                       setPayload((p) => ({ ...p, startDate: e.target.value }))
                     }
-                    className="w-1/2 border border-gray-200 rounded-md px-2 py-1 text-[11px]"
+                    className="w-full border border-gray-200 rounded-md px-2 py-1 text-[11px] sm:w-1/2"
                   />
                   <input
                     type="date"
@@ -194,7 +196,7 @@ export default function FilterModal({
                     onChange={(e) =>
                       setPayload((p) => ({ ...p, endDate: e.target.value }))
                     }
-                    className="w-1/2 border border-gray-200 rounded-md px-2 py-1 text-[11px]"
+                    className="w-full border border-gray-200 rounded-md px-2 py-1 text-[11px] sm:w-1/2"
                   />
                 </div>
               )}
@@ -252,7 +254,7 @@ export default function FilterModal({
             <Chevron open={openSection === "amount"} />
           </button>
           {openSection === "amount" && (
-            <div className="flex items-center gap-2 mt-1">
+            <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-center">
               <input
                 type="number"
                 placeholder="Min"
@@ -262,7 +264,7 @@ export default function FilterModal({
                 }
                 className="w-full border border-gray-300 rounded-md px-2 py-1 text-xs"
               />
-              <span className="text-gray-500 text-xs">-</span>
+              <span className="hidden text-xs text-gray-500 sm:inline">-</span>
               <input
                 type="number"
                 placeholder="Max"
@@ -287,7 +289,7 @@ export default function FilterModal({
             <Chevron open={openSection === "rate"} />
           </button>
           {openSection === "rate" && (
-            <div className="flex items-center gap-2 mt-1">
+            <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-center">
               <input
                 type="number"
                 placeholder="Min %"
@@ -297,7 +299,7 @@ export default function FilterModal({
                 }
                 className="w-full border border-gray-300 rounded-md px-2 py-1 text-xs"
               />
-              <span className="text-gray-500 text-xs">-</span>
+              <span className="hidden text-xs text-gray-500 sm:inline">-</span>
               <input
                 type="number"
                 placeholder="Max %"
@@ -346,37 +348,59 @@ export default function FilterModal({
           )}
         </div>
 
-        <div className="flex items-center justify-end gap-2 mt-4">
-          <Button.SmSecondary
-            height="30px"
-            width="80px"
-            fontSize="text-[11px]"
-            label="Reset"
-            className="flex items-center justify-center py-0 leading-none"
-            onClick={reset}
-          />
-          <Button.SmPrimary
-            height="30px"
-            width="110px"
-            fontSize="text-[11px]"
-            label="Apply Filter"
-            className="flex items-center justify-center py-0 leading-none"
-            onClick={() => {
-              onApply(payload);
-              setOpen(false);
-            }}
-          />
+        <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end">
+          <div className="w-full sm:w-[80px]">
+            <Button.SmSecondary
+              height="30px"
+              fullWidth
+              fontSize="text-[11px]"
+              label="Reset"
+              className="flex items-center justify-center py-0 leading-none"
+              onClick={reset}
+            />
+          </div>
+          <div className="w-full sm:w-[110px]">
+            <Button.SmPrimary
+              height="30px"
+              fullWidth
+              fontSize="text-[11px]"
+              label="Apply Filter"
+              className="flex items-center justify-center py-0 leading-none"
+              onClick={() => {
+                onApply(payload);
+                setOpen(false);
+              }}
+            />
+          </div>
         </div>
       </div>
     </div>
   );
 
-  return variant === "popover" ? (
-    open ? (
-      content
-    ) : null
-  ) : (
-    <Modal open={open} onClosed={() => setOpen(false)} setClose={setOpen}>
+  if (variant === "popover" && isCompact) {
+    return (
+      <Modal
+        open={open}
+        setClose={setOpen}
+        onClosed={() => setOpen(false)}
+        contentClassName="p-0 w-full max-w-[min(400px,calc(100vw-2rem))]"
+      >
+        {content}
+      </Modal>
+    );
+  }
+
+  if (variant === "popover") {
+    return open ? content : null;
+  }
+
+  return (
+    <Modal
+      open={open}
+      onClosed={() => setOpen(false)}
+      setClose={setOpen}
+      contentClassName="p-0 w-full max-w-[min(400px,calc(100vw-2rem))] sm:max-w-none"
+    >
       {content}
     </Modal>
   );

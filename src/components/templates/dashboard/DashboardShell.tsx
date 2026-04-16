@@ -1,21 +1,58 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import Image from "next/image";
 import Sidebar from "@/components/organisms/dashboard/Sidebar";
-import { imagesAndIcons } from "@/constants/imagesAndIcons";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { getSessionToken } from "@/state/appState";
 import KycStatusPoller from "@/components/auth/KycStatusPoller";
+
+function MenuIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      className={className}
+      aria-hidden
+    >
+      <path
+        d="M4 7h16M4 12h16M4 17h16"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
 
 export default function DashboardShell({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const SIDEBAR_WIDTH = 210;
   const router = useRouter();
+  const pathname = usePathname();
   const [authed, setAuthed] = useState<boolean | null>(null);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  useEffect(() => {
+    setMobileNavOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!mobileNavOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMobileNavOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [mobileNavOpen]);
 
   const tokenPresent = useMemo(() => {
     const direct = getSessionToken();
@@ -55,38 +92,53 @@ export default function DashboardShell({
   if (tokenPresent === false && authed !== true) {
     return null;
   }
+
   if (authed === false) return null;
   return (
     <div className="scale-small-text h-screen bg-[#F6F6F6] overflow-hidden">
       <KycStatusPoller />
-      {/* Left Sidebar (fixed, full height) */}
-      <div className="fixed inset-y-0 left-0 z-20">
-        <Sidebar />
+
+      {/* Mobile drawer backdrop */}
+      <button
+        type="button"
+        aria-label={mobileNavOpen ? "Close menu" : undefined}
+        className={`fixed inset-0 z-30 bg-black/40 transition-opacity lg:hidden ${
+          mobileNavOpen ? "opacity-100" : "pointer-events-none opacity-0"
+        }`}
+        tabIndex={mobileNavOpen ? 0 : -1}
+        onClick={() => setMobileNavOpen(false)}
+      />
+
+      {/* Sidebar: off-canvas on small screens, fixed on lg+ */}
+      <div
+        className={`fixed inset-y-0 left-0 z-40 w-[210px] transition-transform duration-200 ease-out lg:translate-x-0 ${
+          mobileNavOpen ? "translate-x-0 shadow-xl" : "-translate-x-full"
+        } lg:shadow-none`}
+      >
+        <Sidebar onNavigate={() => setMobileNavOpen(false)} />
       </div>
 
       {/* Right Content (scrollable) */}
-      <main
-        className="h-screen overflow-y-auto bg-white"
-        style={{ marginLeft: SIDEBAR_WIDTH }}
-      >
-        {/* Sticky top row + divider */}
+      <main className="ml-0 h-screen overflow-y-auto overflow-x-hidden bg-white lg:ml-[210px]">
         <div className="sticky top-0 z-10 bg-white">
-          <div className="flex items-center justify-end px-8 py-5">
+          <div className="relative flex items-center justify-end gap-3 px-4 py-4 sm:px-6 lg:px-8 lg:py-5">
+            <button
+              type="button"
+              className="absolute left-4 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-lg border border-[#EEEEEE] text-[#2E2E2E] hover:bg-[#FAFAFA] lg:hidden"
+              aria-label={mobileNavOpen ? "Close navigation menu" : "Open navigation menu"}
+              aria-expanded={mobileNavOpen}
+              onClick={() => setMobileNavOpen((v) => !v)}
+            >
+              <MenuIcon />
+            </button>
             <button type="button" aria-label="Notifications">
-              {/* <Image
-                src={imagesAndIcons.notif}
-                alt="Notifications"
-                width={20}
-                height={20}
-                className="h-[34px] w-[34px]"
-              /> */}
+              {/* notifications placeholder */}
             </button>
           </div>
           <div className="h-px w-full bg-[#EEEEEE]" />
         </div>
 
-        {/* Page content */}
-        <div className="px-8 py-6">{children}</div>
+        <div className="px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-6">{children}</div>
       </main>
     </div>
   );

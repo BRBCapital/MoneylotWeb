@@ -2,8 +2,10 @@
 
 import React, { useMemo, useState } from "react";
 import Image from "next/image";
+import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import { imagesAndIcons } from "@/constants/imagesAndIcons";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 export type TransactionsFilterPayload = {
   date?: "All" | "Today" | "Yesterday" | "7D" | "30D";
@@ -73,6 +75,7 @@ export default function TransactionsFilterPopover({
   onApply: (payload: TransactionsFilterPayload) => void;
   onReset?: () => void;
 }) {
+  const isCompact = useMediaQuery("(max-width: 639px)");
   const [openSection, setOpenSection] = useState<Section>("date");
   const [payload, setPayload] = useState<TransactionsFilterPayload>({
     date: "All",
@@ -95,8 +98,8 @@ export default function TransactionsFilterPopover({
 
   if (!open) return null;
 
-  return (
-    <div className="w-[344px] rounded-[10px] bg-white border border-[#E9E9E9] shadow-lg p-4 text-[#000000]">
+  const panel = (
+    <div className="w-full min-w-0 max-w-[344px] rounded-[10px] border border-[#E9E9E9] bg-white p-4 text-[#000000] shadow-lg sm:w-[344px]">
       <div className="flex justify-between items-center border-b border-gray-200 pt-1 pb-2">
         <h4 className="font-semibold text-sm">Filter by</h4>
         <button
@@ -151,7 +154,7 @@ export default function TransactionsFilterPopover({
             <Chevron open={openSection === "amount"} />
           </button>
           {openSection === "amount" ? (
-            <div className="mt-2 flex items-center gap-2">
+            <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center">
               <input
                 type="text"
                 inputMode="numeric"
@@ -166,7 +169,7 @@ export default function TransactionsFilterPopover({
                 }
                 className="w-full border border-gray-300 rounded-md px-2 py-1 text-xs text-[#000000] placeholder:text-[#9CA3AF]"
               />
-              <span className="text-gray-500 text-xs">-</span>
+              <span className="hidden text-xs text-gray-500 sm:inline">-</span>
               <input
                 type="text"
                 inputMode="numeric"
@@ -209,31 +212,49 @@ export default function TransactionsFilterPopover({
           ) : null}
         </div>
 
-        <div className="flex items-center justify-end gap-2 mt-4">
-          <Button.SmSecondary
-            height="30px"
-            width="80px"
-            fontSize="text-[11px]"
-            label="Cancel"
-            className="flex items-center justify-center py-0 leading-none"
-            onClick={() => {
-              setOpen(false);
-            }}
-          />
-          <Button.SmPrimary
-            height="30px"
-            width="110px"
-            fontSize="text-[11px]"
-            label="Apply Filter"
-            className="flex items-center justify-center py-0 leading-none"
-            onClick={() => {
-              onApply(payload);
-              setOpen(false);
-            }}
-          />
+        <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end">
+          <div className="w-full sm:w-[80px]">
+            <Button.SmSecondary
+              height="30px"
+              fullWidth
+              fontSize="text-[11px]"
+              label="Cancel"
+              className="flex items-center justify-center py-0 leading-none"
+              onClick={() => {
+                setOpen(false);
+              }}
+            />
+          </div>
+          <div className="w-full sm:w-[110px]">
+            <Button.SmPrimary
+              height="30px"
+              fullWidth
+              fontSize="text-[11px]"
+              label="Apply Filter"
+              className="flex items-center justify-center py-0 leading-none"
+              onClick={() => {
+                onApply(payload);
+                setOpen(false);
+              }}
+            />
+          </div>
         </div>
       </div>
     </div>
   );
+
+  if (isCompact) {
+    return (
+      <Modal
+        open={open}
+        setClose={setOpen}
+        contentClassName="p-0 w-full max-w-[min(400px,calc(100vw-2rem))]"
+      >
+        {panel}
+      </Modal>
+    );
+  }
+
+  return panel;
 }
 

@@ -377,13 +377,13 @@ export default function DashboardPage() {
       {/* KYC status */}
       {isSetupComplete && kycVariant !== "none" ? (
         <div
-          className={`mt-4 mb-6 flex items-center justify-between gap-4 px-4 py-3 border-l-[3px] ${
+          className={`mt-4 mb-6 flex flex-col gap-3 border-l-[3px] px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4 ${
             kycVariant === "rejected"
               ? "bg-[#FFE8E8] border-l-[#FD0303]"
               : "bg-[#FFF6DE] border-l-[#FDA803]"
           }`}
         >
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-start gap-3 sm:items-center">
             <Image
               src={
                 kycVariant === "pending"
@@ -433,7 +433,7 @@ export default function DashboardPage() {
             <button
               type="button"
               onClick={() => setIdentityModalOpen(true)}
-              className={`text-[13px] font-medium hover:opacity-80 ${
+              className={`shrink-0 self-start text-left text-[13px] font-medium hover:opacity-80 sm:self-center ${
                 kycVariant === "rejected" ? "text-[#FD0303]" : "text-[#684502]"
               }`}
             >
@@ -464,12 +464,12 @@ export default function DashboardPage() {
 
       {/* My Investments Section */}
       <div className="bg-white rounded-[10px] py-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-[17px] font-semibold text-[#2E2E2E]">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-[16px] font-semibold text-[#2E2E2E] sm:text-[17px]">
             My Investments
           </h2>
           {investments.length > 0 || hasActiveFilter ? (
-            <div className="relative">
+            <div className="relative self-start sm:self-auto">
               <button
                 type="button"
                 onClick={() => setFilterOpen((v) => !v)}

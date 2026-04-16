@@ -185,12 +185,6 @@ export default function Stage2Verification({
             {citiesError ? (
               <p className="mt-1 text-[10px] text-[#E53935]">{citiesError}</p>
             ) : null}
-            {stateCode.trim() ? (
-              <p className="mt-1 text-[10px] text-[#5F6368]">
-                If your city is missing, type the full name: press Enter when there are
-                no suggestions, or tap Use &quot;…&quot; when it appears under the list.
-              </p>
-            ) : null}
           </div>
         </div>
       </OnboardingCard>

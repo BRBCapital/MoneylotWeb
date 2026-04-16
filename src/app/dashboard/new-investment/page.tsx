@@ -77,13 +77,13 @@ function CardShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-[8px] border border-black/10 bg-white shadow-sm overflow-hidden">
-      <div className="px-6 py-4 text-[14px] font-medium text-[#5F6368]">
+    <div className="overflow-hidden rounded-[8px] border border-black/10 bg-white shadow-sm">
+      <div className="px-4 py-3 text-[13px] font-medium text-[#5F6368] sm:px-6 sm:py-4 sm:text-[14px]">
         {headerLabel}
       </div>
       <div className="h-px w-full bg-[#EEEEEE]" />
 
-      <div className="px-6 py-7">
+      <div className="px-4 py-5 sm:px-6 sm:py-7">
         <h1 className="text-[18px] font-semibold text-[#2E2E2E]">{title}</h1>
         {subtitle ? (
           <p className="mt-1 text-[11px] text-[#5F6368] max-w-[560px]">
@@ -103,12 +103,14 @@ function KVTable({ rows }: { rows: Array<[string, string]> }) {
       {rows.map(([label, value], idx) => (
         <div
           key={label}
-          className={`flex items-center justify-between py-3 ${
+          className={`flex flex-col gap-0.5 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3 ${
             idx === 0 ? "" : "border-t border-[#EEEEEE]"
           }`}
         >
-          <span className="text-[14px] text-[#979797]">{label}</span>
-          <span className="text-[14px] font-semibold text-[#2E2E2E]">
+          <span className="text-[13px] text-[#979797] sm:text-[14px]">
+            {label}
+          </span>
+          <span className="text-right text-[13px] font-semibold text-[#2E2E2E] sm:text-left sm:text-[14px]">
             {value}
           </span>
         </div>

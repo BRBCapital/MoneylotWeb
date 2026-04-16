@@ -84,10 +84,9 @@ export default function DashboardHeader() {
   }, [mounted]);
 
   return (
-    <div className="flex items-center justify-between pb-5">
-      {/* Left: Greeting */}
-      <div>
-        <h1 className="text-[20px] font-semibold text-[#2E2E2E]">
+    <div className="flex flex-col gap-4 pb-5 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+      <div className="min-w-0 flex-1">
+        <h1 className="text-[18px] font-semibold text-[#2E2E2E] sm:text-[20px]">
           {greeting}{mounted && firstName ? `, ${firstName}` : ""}
         </h1>
         {!setup.isComplete ? (
@@ -95,51 +94,56 @@ export default function DashboardHeader() {
             Your profile setup is incomplete
           </p>
         ) : (
-          <p className="mt-1 text-[14px] text-[#5F6368]">
+          <p className="mt-1 text-[13px] text-[#5F6368] sm:text-[14px]">
             {dayName} {dateStr}
           </p>
         )}
       </div>
 
-      {/* Right: Actions */}
-      <div className="flex items-center gap-3">
+      <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
         {!setup.isComplete ? (
-          <Button.SmPrimary
-            label="Continue Setup"
-            height={40}
-            width={170}
-            fontSize="text-[13px]"
-            className="rounded-[8px] font-medium"
-            onClick={() => {
-              const href = pendingHref || setup.href;
-              clearPendingSetupRoute();
-              setPendingHref(null);
-              router.push(href);
-            }}
-          />
-        ) : (
-          <>
-            <Button.SmSecondary
-              label="Withdraw Funds"
-              height={40}
-              width={155}
-              fontSize="text-[13px]"
-              disabled={!isKycVerified}
-              backgroundColor={!isKycVerified ? "bg-[#E5E7EB]" : "bg-white"}
-              textColor={!isKycVerified ? "text-[#9CA3AF]" : "text-[#2E2E2E]"}
-              className={`border rounded-[8px] font-medium ${
-                !isKycVerified ? "border-[#D1D5DB]" : "border-[#EEEEEE]"
-              }`}
-              onClick={() => router.push("/dashboard/withdrawals")}
-            />
+          <div className="w-full sm:w-[170px]">
             <Button.SmPrimary
-              label="New Investment"
+              label="Continue Setup"
               height={40}
-              width={155}
+              fullWidth
               fontSize="text-[13px]"
               className="rounded-[8px] font-medium"
-              onClick={() => router.push("/dashboard/new-investment")}
+              onClick={() => {
+                const href = pendingHref || setup.href;
+                clearPendingSetupRoute();
+                setPendingHref(null);
+                router.push(href);
+              }}
             />
+          </div>
+        ) : (
+          <>
+            <div className="w-full sm:w-[155px]">
+              <Button.SmSecondary
+                label="Withdraw Funds"
+                height={40}
+                fullWidth
+                fontSize="text-[13px]"
+                disabled={!isKycVerified}
+                backgroundColor={!isKycVerified ? "bg-[#E5E7EB]" : "bg-white"}
+                textColor={!isKycVerified ? "text-[#9CA3AF]" : "text-[#2E2E2E]"}
+                className={`border rounded-[8px] font-medium ${
+                  !isKycVerified ? "border-[#D1D5DB]" : "border-[#EEEEEE]"
+                }`}
+                onClick={() => router.push("/dashboard/withdrawals")}
+              />
+            </div>
+            <div className="w-full sm:w-[155px]">
+              <Button.SmPrimary
+                label="New Investment"
+                height={40}
+                fullWidth
+                fontSize="text-[13px]"
+                className="rounded-[8px] font-medium"
+                onClick={() => router.push("/dashboard/new-investment")}
+              />
+            </div>
           </>
         )}
       </div>
