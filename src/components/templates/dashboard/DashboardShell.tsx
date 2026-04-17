@@ -121,7 +121,7 @@ export default function DashboardShell({
       {/* Right Content (scrollable) */}
       <main className="ml-0 h-screen overflow-y-auto overflow-x-hidden bg-white lg:ml-[210px]">
         <div className="sticky top-0 z-10 bg-white">
-          <div className="relative flex items-center justify-end gap-3 px-4 py-4 sm:px-6 lg:px-8 lg:py-5">
+          <div className="relative flex min-h-10 items-center justify-end gap-3 px-4 pb-4 pt-[calc(1rem+env(safe-area-inset-top,0px))] sm:px-6 sm:pb-5 lg:min-h-0 lg:px-8 lg:pb-5 lg:pt-[calc(1.25rem+env(safe-area-inset-top,0px))]">
             <button
               type="button"
               className="absolute left-4 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-lg border border-[#EEEEEE] text-[#2E2E2E] hover:bg-[#FAFAFA] lg:hidden"
@@ -131,7 +131,11 @@ export default function DashboardShell({
             >
               <MenuIcon />
             </button>
-            <button type="button" aria-label="Notifications">
+            <button
+              type="button"
+              className="h-10 w-10 shrink-0 lg:h-10 lg:w-10"
+              aria-label="Notifications"
+            >
               {/* notifications placeholder */}
             </button>
           </div>

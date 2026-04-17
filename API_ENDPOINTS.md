@@ -34,7 +34,32 @@ Auth behavior:
 **Stage 2 — Identity & Address**
 
 - `GET /api/v1/verification/get-country`
+- `GET /api/v1/verification/get-state/{countryCode}`
+- `GET /api/v1/verification/get-city/{stateId}`
 - `POST /api/v1/webinvestment/validate-identity-address`
+
+**Verification — country / state / city (response shape)**
+
+Implemented in `src/services/verification.ts` (`getCountries`, `getStatesByCountryCode`, `getCitiesByStateId`). Each endpoint returns JSON with the same top-level envelope:
+
+```json
+{
+  "status": true,
+  "message": "string",
+  "data": []
+}
+```
+
+- `status`: when `false`, the client throws and surfaces `message`.
+- `data`: array of objects; the client normalizes each item (see below). Empty or missing arrays are treated as no rows.
+
+| Endpoint | Path parameter | Typical `data[]` fields from API (accepted by client) | After normalization (what callers use) |
+| --- | --- | --- | --- |
+| `GET /api/v1/verification/get-country` | — | `name` **or** `countryName` **or** `country`; `code` **or** `iso2` **or** `countryCode`; optional `id`; optional `isActive` (rows with `isActive: false` are dropped) | `CountryDto`: `{ code: string, name: string, id?: number }` |
+| `GET /api/v1/verification/get-state/{countryCode}` | ISO-style country code (e.g. `NG`) | `id`, `name`, `countryCode` | `StateDto`: `{ id: number, countryCode: string, name: string }` |
+| `GET /api/v1/verification/get-city/{stateId}` | Numeric state id | `id`, `stateId`, `name` | `CityDto`: `{ id: number, stateId: number, name: string }` |
+
+The service functions return `{ status, message, data }` with `data` typed as the normalized DTO arrays above (not the raw API objects).
 
 **Stage 3 — Bank Details**
 
