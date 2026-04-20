@@ -12,9 +12,13 @@ import { showSuccessToast } from "@/state/toastState";
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between py-3 border-t border-[#EEEEEE]">
-      <span className="text-[12px] text-[#979797]">{label}</span>
-      <span className="text-[12px] font-semibold text-[#2E2E2E]">{value}</span>
+    <div className="flex flex-col items-center gap-1 border-t border-[#EEEEEE] py-3 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left">
+      <span className="w-full text-center text-[12px] text-[#979797] sm:w-auto sm:text-left">
+        {label}
+      </span>
+      <span className="w-full text-center text-[12px] font-semibold text-[#2E2E2E] sm:w-auto sm:text-right">
+        {value}
+      </span>
     </div>
   );
 }
@@ -80,11 +84,11 @@ export default function RolloverConfirmPage() {
             </p>
 
             <div className="mt-5 rounded-[8px] border border-[#EEEEEE] px-4">
-              <div className="py-3 flex items-center justify-between">
-                <span className="text-[12px] text-[#979797]">
+              <div className="flex flex-col items-center gap-1 py-3 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left">
+                <span className="w-full text-center text-[12px] text-[#979797] sm:w-auto sm:text-left">
                   Investment Type
                 </span>
-                <span className="text-[12px] font-semibold text-[#2E2E2E]">
+                <span className="w-full text-center text-[12px] font-semibold text-[#2E2E2E] sm:w-auto sm:text-right">
                   Fixed Deposit
                 </span>
               </div>

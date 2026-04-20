@@ -464,16 +464,16 @@ export default function DashboardPage() {
 
       {/* My Investments Section */}
       <div className="bg-white rounded-[10px] py-6">
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative mb-4 flex flex-wrap flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-[16px] font-semibold text-[#2E2E2E] sm:text-[17px]">
             My Investments
           </h2>
           {investments.length > 0 || hasActiveFilter ? (
-            <div className="relative self-start sm:self-auto">
+            <>
               <button
                 type="button"
                 onClick={() => setFilterOpen((v) => !v)}
-                className="inline-flex h-[30px] items-center justify-center gap-2 rounded-[6px] border border-[#EEEEEE] bg-white px-3 leading-none hover:bg-[#FAFAFA] transition-colors"
+                className="inline-flex h-[30px] w-fit items-center justify-center gap-2 self-start rounded-[6px] border border-[#EEEEEE] bg-white px-3 leading-none hover:bg-[#FAFAFA] transition-colors sm:self-auto"
               >
                 <Image
                   src={imagesAndIcons.filters}
@@ -487,9 +487,8 @@ export default function DashboardPage() {
                 </span>
               </button>
 
-              {/* Popover filter (anchored under button) */}
               {filterOpen ? (
-                <div className="absolute right-0 top-[calc(100%+10px)] z-20">
+                <div className="absolute left-0 right-0 top-[calc(100%+10px)] z-20 sm:left-auto sm:right-0 sm:w-[min(344px,calc(100vw-3rem))]">
                   <FilterModal
                     open={filterOpen}
                     setOpen={setFilterOpen}
@@ -502,7 +501,7 @@ export default function DashboardPage() {
                   />
                 </div>
               ) : null}
-            </div>
+            </>
           ) : null}
         </div>
 

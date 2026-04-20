@@ -2,10 +2,8 @@
 
 import React, { useMemo, useState } from "react";
 import Image from "next/image";
-import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import { imagesAndIcons } from "@/constants/imagesAndIcons";
-import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 export type TransactionsFilterPayload = {
   date?: "All" | "Today" | "Yesterday" | "7D" | "30D";
@@ -75,7 +73,6 @@ export default function TransactionsFilterPopover({
   onApply: (payload: TransactionsFilterPayload) => void;
   onReset?: () => void;
 }) {
-  const isCompact = useMediaQuery("(max-width: 639px)");
   const [openSection, setOpenSection] = useState<Section>("date");
   const [payload, setPayload] = useState<TransactionsFilterPayload>({
     date: "All",
@@ -99,7 +96,7 @@ export default function TransactionsFilterPopover({
   if (!open) return null;
 
   const panel = (
-    <div className="w-full min-w-0 max-w-[344px] rounded-[10px] border border-[#E9E9E9] bg-white p-4 text-[#000000] shadow-lg sm:w-[344px]">
+    <div className="w-full min-w-0 max-w-none rounded-[10px] border border-[#E9E9E9] bg-white p-4 text-[#000000] shadow-lg sm:max-w-[344px] sm:w-[344px]">
       <div className="flex justify-between items-center border-b border-gray-200 pt-1 pb-2">
         <h4 className="font-semibold text-sm">Filter by</h4>
         <button
@@ -242,18 +239,6 @@ export default function TransactionsFilterPopover({
       </div>
     </div>
   );
-
-  if (isCompact) {
-    return (
-      <Modal
-        open={open}
-        setClose={setOpen}
-        contentClassName="p-0 w-full max-w-[min(400px,calc(100vw-2rem))]"
-      >
-        {panel}
-      </Modal>
-    );
-  }
 
   return panel;
 }

@@ -103,14 +103,14 @@ function KVTable({ rows }: { rows: Array<[string, string]> }) {
       {rows.map(([label, value], idx) => (
         <div
           key={label}
-          className={`flex flex-col gap-0.5 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3 ${
+          className={`flex flex-col items-center gap-1 py-3 text-center sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:text-left ${
             idx === 0 ? "" : "border-t border-[#EEEEEE]"
           }`}
         >
-          <span className="text-[13px] text-[#979797] sm:text-[14px]">
+          <span className="w-full text-center text-[13px] text-[#979797] sm:w-auto sm:text-left sm:text-[14px]">
             {label}
           </span>
-          <span className="text-right text-[13px] font-semibold text-[#2E2E2E] sm:text-left sm:text-[14px]">
+          <span className="w-full text-center text-[13px] font-semibold text-[#2E2E2E] sm:w-auto sm:text-right sm:text-[14px]">
             {value}
           </span>
         </div>

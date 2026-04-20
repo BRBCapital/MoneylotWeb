@@ -242,7 +242,7 @@ export default function Table3({
       )}
 
       {paginationProps && data.length > 0 ? (
-        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
+        <div className="flex flex-col items-start gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
           <Pagination {...paginationProps} />
           <span className="text-sm text-[#5F6368] sm:whitespace-nowrap">
             {paginationProps.limit} entries per page

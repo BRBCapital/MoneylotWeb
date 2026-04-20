@@ -66,13 +66,15 @@ export default function InvestmentConfirmationTable({
       {rows.map(([label, value, tone], idx) => (
         <div
           key={label}
-          className={`flex items-center justify-between px-5 py-3 text-[12px] ${
+          className={`flex flex-col items-center gap-1 px-5 py-3 text-center text-[12px] sm:flex-row sm:items-center sm:justify-between sm:text-left ${
             idx === 0 ? "" : "border-t border-black/5"
           }`}
         >
-          <span className="text-[#5F6368]">{label}</span>
+          <span className="w-full text-center text-[#5F6368] sm:w-auto sm:text-left">
+            {label}
+          </span>
           <span
-            className={`font-medium ${
+            className={`w-full text-center font-medium sm:w-auto sm:text-right ${
               tone === "green" ? "text-[#5FCE55]" : "text-[#2E2E2E]"
             }`}
           >

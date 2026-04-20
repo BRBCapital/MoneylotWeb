@@ -74,7 +74,7 @@ export default function Pagination({
 
   return (
     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-x-2 gap-5 md:gap-0">
-      <div className="flex items-center gap-x-2 justify-center md:justify-start">
+      <div className="flex items-center gap-x-2 justify-start">
         <button
           type="button"
           onClick={handlePrev}

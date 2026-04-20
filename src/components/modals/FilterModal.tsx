@@ -5,7 +5,6 @@ import Image from "next/image";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import { imagesAndIcons } from "@/constants/imagesAndIcons";
-import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 export type FilterPayload = {
   quickDate?: "Today" | "Yesterday" | "7D" | "30D" | "Custom" | "";
@@ -50,7 +49,6 @@ export default function FilterModal({
   initial?: FilterPayload;
   variant?: "modal" | "popover";
 }) {
-  const isCompact = useMediaQuery("(max-width: 639px)");
   const [openSection, setOpenSection] = useState<string | null>("date");
   const [payload, setPayload] = useState<FilterPayload>(initial || {});
 
@@ -128,7 +126,7 @@ export default function FilterModal({
   );
 
   const content = (
-    <div className="w-full min-w-0 max-w-[344px] rounded-[10px] border border-[#E9E9E9] bg-white p-4 shadow-lg sm:w-[344px]">
+    <div className="w-full min-w-0 max-w-none rounded-[10px] border border-[#E9E9E9] bg-white p-4 shadow-lg sm:max-w-[344px] sm:w-[344px]">
       <div className="flex justify-between items-center border-b border-gray-200 pt-1 pb-2">
         <h4 className="font-semibold text-sm">Filter by</h4>
         <button
@@ -376,19 +374,6 @@ export default function FilterModal({
       </div>
     </div>
   );
-
-  if (variant === "popover" && isCompact) {
-    return (
-      <Modal
-        open={open}
-        setClose={setOpen}
-        onClosed={() => setOpen(false)}
-        contentClassName="p-0 w-full max-w-[min(400px,calc(100vw-2rem))]"
-      >
-        {content}
-      </Modal>
-    );
-  }
 
   if (variant === "popover") {
     return open ? content : null;
