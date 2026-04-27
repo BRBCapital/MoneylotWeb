@@ -10,6 +10,7 @@ import {
 import OnboardingCard from "@/components/organisms/onboarding/OnboardingCard";
 import Button from "@/components/ui/Button";
 import IconCheckbox from "@/components/ui/IconCheckbox";
+import { checkPasswordValidity } from "@/lib/password";
 
 export type Stage1FieldErrors = Partial<
   Record<
@@ -84,6 +85,17 @@ export default function Stage1AccountCreation({
   onContinue: () => void | Promise<void>;
   onSignIn: () => void;
 }) {
+  const pwdValidation = checkPasswordValidity(password);
+  const passwordOk = pwdValidation === true;
+
+  const passwordsMatch =
+    password.length > 0 &&
+    confirmPassword.length > 0 &&
+    password === confirmPassword;
+
+  const showConfirmMatchHint =
+    confirmPassword.trim().length > 0 && !passwordsMatch;
+
   return (
     <>
       <div className="mx-auto w-full max-w-[640px]">
@@ -174,20 +186,41 @@ export default function Stage1AccountCreation({
         </div>
 
         <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-          <PasswordField
-            label="Create Password"
-            value={password}
-            onChange={onPasswordChange}
-            autoComplete="new-password"
-            error={stage1FieldErrors.password}
-          />
-          <PasswordField
-            label="Confirm Password"
-            value={confirmPassword}
-            onChange={onConfirmPasswordChange}
-            autoComplete="new-password"
-            error={stage1FieldErrors.confirmPassword}
-          />
+          <div>
+            <PasswordField
+              label="Create Password"
+              value={password}
+              onChange={onPasswordChange}
+              autoComplete="new-password"
+              error={
+                passwordOk ? stage1FieldErrors.password : undefined
+              }
+            />
+            {!passwordOk && typeof pwdValidation === "string" ? (
+              <p className="mt-1 text-[11px] text-[#E53935]">
+                {pwdValidation}
+              </p>
+            ) : null}
+          </div>
+
+          <div>
+            <PasswordField
+              label="Confirm Password"
+              value={confirmPassword}
+              onChange={onConfirmPasswordChange}
+              autoComplete="new-password"
+              error={
+                passwordsMatch ? stage1FieldErrors.confirmPassword : undefined
+              }
+            />
+            {showConfirmMatchHint ? (
+              <p className="mt-1 text-[11px] text-[#E53935]">
+                {confirmPassword.length > 0 && password !== confirmPassword
+                  ? "Passwords do not match"
+                  : "Must match your password"}
+              </p>
+            ) : null}
+          </div>
         </div>
 
         <div className="mt-4">
