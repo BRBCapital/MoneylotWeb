@@ -6,7 +6,7 @@ This document lists **every HTTP endpoint this web app can call** (implemented u
 
 All **relative** endpoints are called via:
 
-- `API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || https://brbmoneylotwebapi-ezavaeh4a8egdjhk.southafricanorth-01.azurewebsites.net`
+- `API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || https://moneylotapi.moneylot.com`
 
 Auth behavior:
 

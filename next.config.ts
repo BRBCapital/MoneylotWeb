@@ -5,6 +5,11 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
+        hostname: "moneylotapi.moneylot.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
         hostname: "mlotdev.azurewebsites.net",
         pathname: "/**",
       },

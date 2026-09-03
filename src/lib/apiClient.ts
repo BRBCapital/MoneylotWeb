@@ -12,8 +12,7 @@ export class ApiError extends Error {
   }
 }
 
-const DEFAULT_BASE_URL =
-  "https://moneylotv2webapi-aedchvaqddhaaneb.southafricanorth-01.azurewebsites.net";
+const DEFAULT_BASE_URL = "https://moneylotapi.moneylot.com";
 
 export const API_BASE_URL = (
   process.env.NEXT_PUBLIC_API_BASE_URL || DEFAULT_BASE_URL
